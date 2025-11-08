@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCaptionConsole", "AutoCaptionConsole\AutoCaptionConsole.csproj", "{70089C6A-00F3-4A6B-B730-A18D49C021B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Desktop", "Desktop\Desktop.csproj", "{9B6EC683-DF72-4BEF-8107-BA7CFB01127E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{70089C6A-00F3-4A6B-B730-A18D49C021B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70089C6A-00F3-4A6B-B730-A18D49C021B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70089C6A-00F3-4A6B-B730-A18D49C021B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70089C6A-00F3-4A6B-B730-A18D49C021B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B6EC683-DF72-4BEF-8107-BA7CFB01127E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B6EC683-DF72-4BEF-8107-BA7CFB01127E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B6EC683-DF72-4BEF-8107-BA7CFB01127E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B6EC683-DF72-4BEF-8107-BA7CFB01127E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
