@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -16,43 +17,89 @@ public partial class MainWindow : Window
 
     private async void Button_OnClick(object? sender, RoutedEventArgs routedEventArgs)
     {
-        var opt = new FilePickerOpenOptions();
+        #region Variables, that should be configurable
 
-        var file = await StorageProvider.OpenFilePickerAsync(opt);
+        var python = @"python3";
+        var useGpu = true;
+        // var outPutFormat = "all";
+        var outPutFormat = "vtt";
+        var model = "medium";
 
-        List<string> arguments =
-        [
-            "whisper",
-            $"\"{file[0].Path.LocalPath}\"",
-            "--device cuda",
-            "-o E:/YouTube/captions/",
-            "--output_format all",
-            "--model medium",
-            "--language English"
-        ];
-        var command =
-            @"whisper 'D:\Old Videos\YGO Beginning 3 2.0.mov' --device cuda -o E:/YouTube/captions/ --output_format all --model medium --language English";
+        #endregion
 
-        var x = file[0].Path.LocalPath;
-        Console.WriteLine(x);
+        #region Variables, that should be selected per file
 
-        var info = new ProcessStartInfo
+        var language = CultureInfo.GetCultureInfoByIetfLanguageTag("en-US");
+        var outputLocation = "\"E:/YouTube/captions/\"";
+
+        #endregion
+
+        var opt = new FilePickerOpenOptions
         {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            FileName = "python3",
-            Arguments = $"-m {string.Join(' ', arguments)}",
-            UseShellExecute = false
+            AllowMultiple = true,
+            Title = "Input Files"
         };
-        // var proc = Process.Start($"python3 -m {command}");
-        var proc = Process.Start(info);
-        proc.OutputDataReceived += (a, b) => Console.WriteLine(b.Data);
-        proc.ErrorDataReceived += (a, b) => Console.WriteLine(b.Data);
-        proc.WaitForExit(TimeSpan.FromMinutes(10));
+        var files = await StorageProvider.OpenFilePickerAsync(opt);
 
-        Console.WriteLine(await proc.StandardOutput.ReadToEndAsync());
-        Console.WriteLine(await proc.StandardError.ReadToEndAsync());
+        foreach (var file in files)
+        {
+            List<string> arguments =
+            [
+                "whisper",
+                $"\"{file.Path.LocalPath}\"",
+                $"--device {(useGpu ? "cuda" : "cpu")}",
+                $"-o {outputLocation}",
+                $"--output_format {outPutFormat}",
+                $"--model {model}",
+                $"--language {language.TwoLetterISOLanguageName}"
+            ];
 
-        if (proc.ExitCode != 0) throw new Exception("Python Exitcode: " + proc.ExitCode);
+            var info = new ProcessStartInfo
+            {
+                FileName = python,
+                Arguments = $"-m {string.Join(' ', arguments)}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            Console.WriteLine(info.Arguments);
+            var proc = new Process();
+            proc.StartInfo = info;
+            Console.WriteLine(1);
+
+            proc.OutputDataReceived += (a, b) => Console.WriteLine(a + " " + b.Data);
+            proc.ErrorDataReceived += (a, b) => Console.WriteLine("ERRRORF " + a + " " + b.Data);
+
+            Console.WriteLine(1.5);
+            proc.Start();
+            proc.BeginOutputReadLine();
+            proc.BeginErrorReadLine();
+            Console.WriteLine(2);
+
+            await proc.WaitForExitAsync();
+
+
+            // var i = 0;
+            // while (!proc.HasExited)
+            // {
+            //     // Console.WriteLine(3);
+            //     // var asd = await proc.StandardOutput.ReadToEndAsync();
+            //     // Console.WriteLine(4);
+            //     // var asd2 = await proc.StandardError.ReadToEndAsync();
+            //     // Console.WriteLine(5);
+            //     // Console.WriteLine(asd);
+            //     // Console.WriteLine(asd2);
+            //     Console.WriteLine("READ LINE");
+            //     proc.BeginOutputReadLine();
+            //     Console.WriteLine(i++);
+            //     await Task.Delay(1000);
+            // }
+
+            Console.WriteLine(await proc.StandardOutput.ReadToEndAsync());
+            Console.WriteLine(await proc.StandardError.ReadToEndAsync());
+
+            if (proc.ExitCode != 0) throw new Exception("Python Exitcode: " + proc.ExitCode);
+        }
     }
 }
