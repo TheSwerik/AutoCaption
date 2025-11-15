@@ -1,13 +1,21 @@
 ﻿using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Desktop.Services;
 
 public static class ConfigService
 {
+    private static readonly JsonSerializerOptions JsonOptions;
+
     static ConfigService()
     {
+        JsonOptions = new JsonSerializerOptions();
+        JsonOptions.Converters.Add(new JsonStringEnumConverter());
+        JsonOptions.WriteIndented = true;
+
+
         if (FromSettings())
         {
             Save();
@@ -42,7 +50,7 @@ public static class ConfigService
             if (File.Exists(filePath))
             {
                 var json = File.ReadAllText(filePath);
-                var config = JsonSerializer.Deserialize<Configuration>(json);
+                var config = JsonSerializer.Deserialize<Configuration>(json, JsonOptions);
                 if (config is not null)
                 {
                     Config = config;
@@ -65,7 +73,7 @@ public static class ConfigService
         var settingsLocation = Path.Combine(roaming, "AutoCaption");
         var filePath = Path.Combine(settingsLocation, "config.json");
 
-        var json = JsonSerializer.Serialize(Config);
+        var json = JsonSerializer.Serialize(Config, JsonOptions);
         File.WriteAllText(filePath, json);
     }
 
