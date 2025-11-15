@@ -1,5 +1,6 @@
 ﻿using System;
 using Avalonia;
+using Desktop.Services;
 
 namespace Desktop;
 
@@ -11,6 +12,7 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        ConfigService.Init(args);
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
@@ -19,8 +21,8 @@ internal sealed class Program
     public static AppBuilder BuildAvaloniaApp()
     {
         return AppBuilder.Configure<App>()
-                         .UsePlatformDetect()
-                         .WithInterFont()
-                         .LogToTrace();
+            .UsePlatformDetect()
+            .WithInterFont()
+            .LogToTrace();
     }
 }

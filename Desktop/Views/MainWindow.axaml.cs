@@ -5,6 +5,7 @@ using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Desktop.Services;
 
 namespace Desktop.Views;
 
@@ -17,16 +18,6 @@ public partial class MainWindow : Window
 
     private async void Button_OnClick(object? sender, RoutedEventArgs routedEventArgs)
     {
-        #region Variables, that should be configurable
-
-        var python = @"python3";
-        var useGpu = true;
-        // var outPutFormat = "all";
-        var outPutFormat = "vtt";
-        var model = "medium";
-
-        #endregion
-
         #region Variables, that should be selected per file
 
         var language = CultureInfo.GetCultureInfoByIetfLanguageTag("en-US");
@@ -47,16 +38,16 @@ public partial class MainWindow : Window
             [
                 "whisper",
                 $"\"{file.Path.LocalPath}\"",
-                $"--device {(useGpu ? "cuda" : "cpu")}",
+                $"--device {(ConfigService.Config.UseGpu ? "cuda" : "cpu")}",
                 $"-o {outputLocation}",
-                $"--output_format {outPutFormat}",
-                $"--model {model}",
+                $"--output_format {ConfigService.Config.OutputFormat.ToString().ToLowerInvariant()}",
+                $"--model {ConfigService.Config.Model.ToString().ToLowerInvariant()}",
                 $"--language {language.TwoLetterISOLanguageName}"
             ];
 
             var info = new ProcessStartInfo
             {
-                FileName = python,
+                FileName = ConfigService.Config.PythonLocation,
                 Arguments = $"-m {string.Join(' ', arguments)}",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -78,26 +69,6 @@ public partial class MainWindow : Window
             Console.WriteLine(2);
 
             await proc.WaitForExitAsync();
-
-
-            // var i = 0;
-            // while (!proc.HasExited)
-            // {
-            //     // Console.WriteLine(3);
-            //     // var asd = await proc.StandardOutput.ReadToEndAsync();
-            //     // Console.WriteLine(4);
-            //     // var asd2 = await proc.StandardError.ReadToEndAsync();
-            //     // Console.WriteLine(5);
-            //     // Console.WriteLine(asd);
-            //     // Console.WriteLine(asd2);
-            //     Console.WriteLine("READ LINE");
-            //     proc.BeginOutputReadLine();
-            //     Console.WriteLine(i++);
-            //     await Task.Delay(1000);
-            // }
-
-            Console.WriteLine(await proc.StandardOutput.ReadToEndAsync());
-            Console.WriteLine(await proc.StandardError.ReadToEndAsync());
 
             if (proc.ExitCode != 0) throw new Exception("Python Exitcode: " + proc.ExitCode);
         }
