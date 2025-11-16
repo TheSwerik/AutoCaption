@@ -29,8 +29,8 @@
                     <ExperimentalAcrylicMaterial
                         BackgroundSource="Digger"
                         TintColor="Green"
-                        TintOpacity="1"
-                        MaterialOpacity="0.2" />
+                        TintOpacity="0.3"
+                        MaterialOpacity="0.05" />
                 </ExperimentalAcrylicBorder.Material>
             </ExperimentalAcrylicBorder>
 
@@ -54,9 +54,8 @@
                              IsVisible="{Binding IsInProgress}"
                              Value="{Binding Progress}" />
 
-                <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis">
-                    E:\YouTube\Tekken Controllers voice-german.flac
-                </TextBlock>
+                <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                           Text="{Binding FileString}"/>
             </DockPanel>
         </Panel>
     </Border>

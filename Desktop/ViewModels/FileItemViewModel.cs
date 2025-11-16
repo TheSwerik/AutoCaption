@@ -1,12 +1,13 @@
 ﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace Desktop.ViewModels;
 
 public partial class FileItemViewModel : ViewModelBase
 {
-    [ObservableProperty] private string _filesString = "";
+    [ObservableProperty] private string _fileString = "";
     [ObservableProperty] private bool _isCompleted;
     [ObservableProperty] private bool _isInProgress;
     [ObservableProperty] private double _progress;
@@ -21,7 +22,6 @@ public partial class FileItemViewModel : ViewModelBase
     [RelayCommand]
     private async Task Delete()
     {
-        IsInProgress = !IsInProgress;
-        IsCompleted = !IsCompleted;
+        WeakReferenceMessenger.Default.Send(new RemoveInputFileMessage(FileString));
     }
 }

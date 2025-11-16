@@ -13,20 +13,8 @@
         Title="AutoCaption">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel />
     </Design.DataContext>
-
-    <!-- <Window.Resources> -->
-    <!--     <DataTemplate DataType="{x:Type vm:FileItemViewModel}"> -->
-    <!--         <ContentControl Content="{Binding .}" /> -->
-    <!--     </DataTemplate> -->
-    <!-- -->
-    <!--     <DataTemplate DataType="{x:Type vm:AddViewModel}"> -->
-    <!--         <ContentControl Content="{Binding .}" /> -->
-    <!--     </DataTemplate> -->
-    <!-- </Window.Resources> -->
 
     <Panel Margin="10 30 10 10">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -8,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Desktop.Services;
 using Desktop.Views;
 using MediaToolkit;
@@ -17,6 +19,9 @@ namespace Desktop.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    public MainWindowViewModel()
+    {
+    }
     private static readonly FilePickerOpenOptions InputOpt = new()
     {
         AllowMultiple = true,
@@ -29,23 +34,6 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private bool _isInProgress;
     [ObservableProperty] private double _progress = 50;
     private List<string> Files { get; set; } = [];
-
-    [RelayCommand]
-    private async Task SelectInput()
-    {
-        var mainWindow = App.Windows.First(w => w is MainWindow);
-        var topLevel = TopLevel.GetTopLevel(mainWindow) ?? throw new UnreachableException();
-        var input = await topLevel.StorageProvider.OpenFilePickerAsync(InputOpt);
-
-        Files = input.Select(f => f.Path.LocalPath).ToList();
-        FileItems = new ObservableCollection<ViewModelBase>(input.Select(f => new FileItemViewModel
-        {
-            FilesString = f.Path.LocalPath,
-            IsInProgress = false,
-            Progress = 0
-        }).ToList()) { new AddViewModel() };
-        FilesString = string.Join('\n', Files);
-    }
 
     [RelayCommand]
     private async Task Start()
@@ -99,5 +87,27 @@ public partial class MainWindowViewModel : ViewModelBase
         var timestamp = TimeSpan.Parse(timestampString);
 
         Progress = timestamp / totalDuration * 100.0;
+    }
+
+    public void AddFiles(IEnumerable<string> files)
+    {
+        Files.AddRange(files);
+        // Files = Files.Distinct().ToList();
+        RegenerateFileViews();
+    }
+
+    public void RemoveFile(string file)
+    {
+        Files.Remove(file);
+        RegenerateFileViews();
+    }
+
+    private void RegenerateFileViews()
+    {
+        var fileItems = Files.Select(f => new FileItemViewModel { FileString = f });
+        var itemsWithAdd = fileItems.Cast<ViewModelBase>().Concat([new AddViewModel()]);
+        FileItems = new ObservableCollection<ViewModelBase>(itemsWithAdd);
+
+        FilesString = string.Join('\n', Files);
     }
 }
