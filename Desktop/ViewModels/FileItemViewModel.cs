@@ -13,10 +13,19 @@ namespace Desktop.ViewModels;
 
 public partial class FileItemViewModel : ViewModelBase
 {
+    [ObservableProperty] private bool _doSplitting;
+
+    [ObservableProperty] private bool _isCompleted;
+    [ObservableProperty] private bool _isInProgress;
+    [ObservableProperty] private string _language;
+    [ObservableProperty] private string _outputLocation;
+    [ObservableProperty] private string _path = "";
+    [ObservableProperty] private double _progress;
+
     public FileItemViewModel()
     {
-
     }
+
     public FileItemViewModel(string path)
     {
         Path = path;
@@ -24,15 +33,6 @@ public partial class FileItemViewModel : ViewModelBase
         OutputLocation = ConfigService.Config.OutputLocation;
         Language = ConfigService.Config.Language;
     }
-    [ObservableProperty] private string _path = "";
-
-    [ObservableProperty] private bool _isCompleted;
-    [ObservableProperty] private bool _isInProgress;
-    [ObservableProperty] private double _progress;
-
-    [ObservableProperty] private bool _doSplitting;
-    [ObservableProperty] private string _outputLocation;
-    [ObservableProperty] private string _language;
 
     [RelayCommand]
     private void OpenEdit()
@@ -52,31 +52,29 @@ public partial class FileItemViewModel : ViewModelBase
 
     public async Task Process()
     {
-
         var inputFile = new MediaFile { Filename = Path };
         using (var engine = new Engine())
         {
             engine.GetMetadata(inputFile);
         }
 
-
         DataReceivedEventHandler progressHandler = delegate(object _, DataReceivedEventArgs args)
         {
             CalculateProgress(args, inputFile.Metadata.Duration);
         };
+
         WhisperService.OnOutput += progressHandler;
-
-
 
         var settings = new WhisperSettings(
             Path,
-            "E:/Youtube",
-            "en"
+            OutputLocation,
+            Language
         );
         await WhisperService.Start(settings);
 
         WhisperService.OnOutput -= progressHandler;
     }
+
     private void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration)
     {
         if (args.Data is null) return;

@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -12,8 +14,19 @@ namespace Desktop.ViewModels;
 
 public partial class FileItemSettingsViewModel : ViewModelBase
 {
+    private static readonly FolderPickerOpenOptions OutputOptions = new()
+    {
+        AllowMultiple = false,
+        Title = "Output Location"
+    };
+
+    private readonly FileItemViewModel _original;
     [ObservableProperty] private FileItemViewModel _file;
-    private FileItemViewModel _original;
+
+    [ObservableProperty] private CultureInfo _language = CultureInfo.GetCultureInfo("en-US");
+
+    [ObservableProperty]
+    private ObservableCollection<CultureInfo> _languages = new(CultureInfo.GetCultures(CultureTypes.AllCultures));
 
     public FileItemSettingsViewModel()
     {
@@ -34,13 +47,8 @@ public partial class FileItemSettingsViewModel : ViewModelBase
             Language = file.Language,
             OutputLocation = file.OutputLocation
         };
+        _language = CultureInfo.GetCultureInfo(file.Language);
     }
-
-    private static readonly FolderPickerOpenOptions OutputOptions = new()
-    {
-        AllowMultiple = false,
-        Title = "Output Location"
-    };
 
     [RelayCommand]
     private async Task SelectOutputLocation()
@@ -55,8 +63,9 @@ public partial class FileItemSettingsViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task SelectLanguage()
+    private void LanguageChanged()
     {
+        File.Language = Language.TwoLetterISOLanguageName;
     }
 
     [RelayCommand]

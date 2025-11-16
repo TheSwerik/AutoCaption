@@ -67,14 +67,23 @@
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
                     <Label Target="Language">Language:</Label>
-                    <TextBox Name="Language"
-                             Text="{Binding File.Language}">
+                    <ComboBox Name="Language"
+                              ItemsSource="{Binding Languages}"
+                              SelectedItem="{Binding Language}"
+                              MaxDropDownHeight="400"
+                              Width="250">
                         <Interaction.Behaviors>
-                            <EventTriggerBehavior EventName="GotFocus">
-                                <InvokeCommandAction Command="{Binding SelectLanguageCommand}" />
+                            <EventTriggerBehavior EventName="SelectionChanged">
+                                <InvokeCommandAction Command="{Binding LanguageChangedCommand}" />
                             </EventTriggerBehavior>
                         </Interaction.Behaviors>
-                    </TextBox>
+
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding EnglishName}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
