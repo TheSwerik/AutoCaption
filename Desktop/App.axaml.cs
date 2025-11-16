@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
@@ -10,6 +12,8 @@ namespace Desktop;
 
 public class App : Application
 {
+    public static List<Window> Windows = [];
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -26,6 +30,7 @@ public class App : Application
             {
                 DataContext = new MainWindowViewModel()
             };
+            Windows.Add(desktop.MainWindow);
         }
 
         base.OnFrameworkInitializationCompleted();

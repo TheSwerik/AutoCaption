@@ -10,6 +10,6 @@
     </Application.DataTemplates>
 
     <Application.Styles>
-        <FluentTheme />
+        <FluentTheme DensityStyle="Normal" />
     </Application.Styles>
 </Application>

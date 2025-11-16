@@ -1,11 +1,12 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Desktop.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="using:Desktop.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="450"
-        x:Class="Desktop.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        mc:Ignorable="d"
+        d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Desktop.Views.OutputSettings"
+        x:DataType="vm:OutputSettingsViewModel"
         Icon="/Assets/avalonia-logo.ico"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
@@ -31,31 +32,23 @@
             <Grid
                 RowDefinitions="5*,*,*,*,5*" ColumnDefinitions="5*,*,*,*,5*"
                 RowSpacing="5">
-                <Label Grid.Row="1" Grid.Column="1" Target="Files">Files:</Label>
-                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
-                         Name="Files"
-                         Height="100"
-                         AcceptsReturn="True" TextWrapping="Wrap"
-                         IsReadOnly="True"
-                         Text="{Binding FilesString}">
+                <Label Grid.Row="0" Grid.Column="0" Target="OutputLocation">Language</Label>
+
+                <Label Grid.Row="1" Grid.Column="0" Target="OutputLocation">Location</Label>
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         Name="OutputLocation"
+                         Text="{Binding OutputLocation}">
                     <Interaction.Behaviors>
                         <EventTriggerBehavior EventName="GotFocus">
-                            <InvokeCommandAction Command="{Binding SelectInputCommand}" />
+                            <InvokeCommandAction Command="{Binding SelectOutputLocationCommand}" />
                         </EventTriggerBehavior>
                     </Interaction.Behaviors>
+
                 </TextBox>
 
-                <ProgressBar Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
-                             Value="{Binding Progress}" />
-
-                <Button Grid.Row="4" Grid.Column="2"
-                        IsEnabled="{Binding !IsInProgress}"
-                        Command="{Binding StartCommand}">
-                    Start
-                </Button>
-
+                <Label Grid.Row="2" Grid.Column="0" Target="Splitting">Splitting</Label>
+                <CheckBox Grid.Row="2" Grid.Column="1" Name="Splitting" IsChecked="{Binding DoSplitting}" />
             </Grid>
         </Panel>
     </Grid>
-
 </Window>

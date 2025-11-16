@@ -7,8 +7,8 @@ namespace Desktop.Services;
 
 public static class WhisperService
 {
-    public static event EventHandler OnOutput;
-    public static event EventHandler OnError;
+    public static event DataReceivedEventHandler? OnOutput;
+    public static event DataReceivedEventHandler? OnError;
 
     public static async Task Start(params WhisperSettings[] settings)
     {
@@ -58,13 +58,13 @@ public static class WhisperService
     private static void OutputReceived(object sender, DataReceivedEventArgs e)
     {
         Console.WriteLine(sender + " " + e.Data);
-        OnOutput.Invoke(sender, e);
+        OnOutput?.Invoke(sender, e);
     }
 
     private static void ErrorReceived(object sender, DataReceivedEventArgs e)
     {
         Console.WriteLine("ERROR: " + sender + " " + e.Data);
-        OnOutput.Invoke(sender, e);
+        OnOutput?.Invoke(sender, e);
     }
 }
 

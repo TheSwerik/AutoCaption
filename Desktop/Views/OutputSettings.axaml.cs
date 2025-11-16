@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using Avalonia.Controls;
@@ -8,11 +8,11 @@ using Desktop.Services;
 
 namespace Desktop.Views;
 
-public partial class MainWindow : Window
+public partial class OutputSettings : Window
 {
     private CultureInfo[] _cultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
 
-    public MainWindow()
+    public OutputSettings()
     {
         InitializeComponent();
     }
