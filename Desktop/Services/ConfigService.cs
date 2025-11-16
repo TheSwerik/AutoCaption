@@ -118,15 +118,37 @@ public static class ConfigService
                 Save();
             }
         }
-    }
-}
 
-public enum Config
-{
-    OutputFormat,
-    PythonLocation,
-    UseGpu,
-    Model
+        public bool DoSplitting
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        }
+
+        public string OutputLocation
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = "";
+
+        public string Language
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = "";
+    }
 }
 
 public enum OutputFormat

@@ -54,7 +54,7 @@
                              Value="{Binding Progress}" />
 
                 <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                           Text="{Binding FileString}" />
+                           Text="{Binding Path}" />
             </DockPanel>
         </Panel>
     </Border>

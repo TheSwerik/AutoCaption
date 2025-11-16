@@ -10,42 +10,80 @@
         Icon="/Assets/avalonia-logo.ico"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
+        HorizontalAlignment="Stretch"
         Title="AutoCaption">
     <Design.DataContext>
         <vm:FileItemSettingsViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="*,Auto,*" ColumnDefinitions="*,Auto,*">
-        <Panel Grid.Row="1" Grid.Column="1">
-            <ExperimentalAcrylicBorder IsHitTestVisible="False">
-                <ExperimentalAcrylicBorder.Material>
-                    <ExperimentalAcrylicMaterial
-                        BackgroundSource="Digger"
-                        TintColor="Black"
-                        TintOpacity="1"
-                        MaterialOpacity="0.65" />
-                </ExperimentalAcrylicBorder.Material>
-            </ExperimentalAcrylicBorder>
-            <Grid
-                RowDefinitions="5*,*,*,*,5*" ColumnDefinitions="5*,*,*,*,5*"
-                RowSpacing="5">
-                <Label Grid.Row="0" Grid.Column="0" Target="OutputLocation">Language</Label>
+    <Panel Margin="10 30 10 10">
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
 
-                <Label Grid.Row="1" Grid.Column="0" Target="OutputLocation">Location</Label>
-                <TextBox Grid.Row="1" Grid.Column="1"
-                         Name="OutputLocation"
-                         Text="{Binding OutputLocation}">
-                    <Interaction.Behaviors>
-                        <EventTriggerBehavior EventName="GotFocus">
-                            <InvokeCommandAction Command="{Binding SelectOutputLocationCommand}" />
-                        </EventTriggerBehavior>
-                    </Interaction.Behaviors>
+        <DockPanel Margin="20"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch"
+                   LastChildFill="True">
 
-                </TextBox>
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        DockPanel.Dock="Bottom">
 
-                <Label Grid.Row="2" Grid.Column="0" Target="Splitting">Splitting</Label>
-                <CheckBox Grid.Row="2" Grid.Column="1" Name="Splitting" IsChecked="{Binding DoSplitting}" />
-            </Grid>
-        </Panel>
-    </Grid>
+                <Button Width="100"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding SaveCommand}">
+                    Save
+                </Button>
+                <Button Width="100"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding CancelCommand}">
+                    Cancel
+                </Button>
+            </StackPanel>
+
+            <StackPanel Spacing="5"
+                        VerticalAlignment="Stretch">
+
+                <TextBlock Text="{Binding File.Path}" />
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                    <Label Target="Output">OutputLocation:</Label>
+                    <TextBox Name="Output"
+                             Text="{Binding File.OutputLocation}">
+                        <Interaction.Behaviors>
+                            <EventTriggerBehavior EventName="GotFocus">
+                                <InvokeCommandAction Command="{Binding SelectOutputLocationCommand}" />
+                            </EventTriggerBehavior>
+                        </Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                    <Label Target="Language">Language:</Label>
+                    <TextBox Name="Language"
+                             Text="{Binding File.Language}">
+                        <Interaction.Behaviors>
+                            <EventTriggerBehavior EventName="GotFocus">
+                                <InvokeCommandAction Command="{Binding SelectLanguageCommand}" />
+                            </EventTriggerBehavior>
+                        </Interaction.Behaviors>
+                    </TextBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+                    <Label Target="Splitting">Splitting:</Label>
+                    <CheckBox Name="Splitting"
+                              IsChecked="{Binding File.DoSplitting}" />
+                </StackPanel>
+
+            </StackPanel>
+        </DockPanel>
+    </Panel>
 </Window>
