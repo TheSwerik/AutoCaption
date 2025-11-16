@@ -11,6 +11,7 @@
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
+        Width="450" Height="300"
         Title="AutoCaption">
     <Design.DataContext>
         <vm:FileItemSettingsViewModel />
@@ -48,51 +49,60 @@
                 </Button>
             </StackPanel>
 
-            <StackPanel Spacing="5"
-                        VerticalAlignment="Stretch">
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,*"
+                  ColumnDefinitions="*,*"
+                  VerticalAlignment="Stretch">
 
-                <TextBlock Text="{Binding File.Path}" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                           Text="{Binding File.Path}" />
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                    <Label Target="Output">OutputLocation:</Label>
-                    <TextBox Name="Output"
-                             Text="{Binding File.OutputLocation}">
-                        <Interaction.Behaviors>
-                            <EventTriggerBehavior EventName="GotFocus">
-                                <InvokeCommandAction Command="{Binding SelectOutputLocationCommand}" />
-                            </EventTriggerBehavior>
-                        </Interaction.Behaviors>
-                    </TextBox>
-                </StackPanel>
+                <Label Grid.Row="1" Grid.Column="0"
+                       Target="Output">
+                    OutputLocation:
+                </Label>
+                <TextBox Grid.Row="1" Grid.Column="1"
+                         HorizontalContentAlignment="Stretch"
+                         Name="Output"
+                         Text="{Binding File.OutputLocation}">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="GotFocus">
+                            <InvokeCommandAction Command="{Binding SelectOutputLocationCommand}" />
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
+                </TextBox>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                    <Label Target="Language">Language:</Label>
-                    <ComboBox Name="Language"
-                              ItemsSource="{Binding Languages}"
-                              SelectedItem="{Binding Language}"
-                              MaxDropDownHeight="400"
-                              Width="250">
-                        <Interaction.Behaviors>
-                            <EventTriggerBehavior EventName="SelectionChanged">
-                                <InvokeCommandAction Command="{Binding LanguageChangedCommand}" />
-                            </EventTriggerBehavior>
-                        </Interaction.Behaviors>
+                <Label Grid.Row="2" Grid.Column="0"
+                       Target="Language">
+                    Language:
+                </Label>
+                <ComboBox Grid.Row="2" Grid.Column="1"
+                          HorizontalContentAlignment="Stretch"
+                          Name="Language"
+                          ItemsSource="{Binding Languages}"
+                          SelectedItem="{Binding Language}"
+                          MaxDropDownHeight="400">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="SelectionChanged">
+                            <InvokeCommandAction Command="{Binding LanguageChangedCommand}" />
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
 
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding EnglishName}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                </StackPanel>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding EnglishName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-                    <Label Target="Splitting">Splitting:</Label>
-                    <CheckBox Name="Splitting"
-                              IsChecked="{Binding File.DoSplitting}" />
-                </StackPanel>
+                <Label Grid.Row="3" Grid.Column="0"
+                       Target="Splitting">
+                    Splitting:
+                </Label>
+                <CheckBox Grid.Row="3" Grid.Column="1"
+                          Name="Splitting"
+                          IsChecked="{Binding File.DoSplitting}" />
 
-            </StackPanel>
+            </Grid>
         </DockPanel>
     </Panel>
 </Window>

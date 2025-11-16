@@ -10,12 +10,12 @@ public static class WhisperService
     public static event DataReceivedEventHandler? OnOutput;
     public static event DataReceivedEventHandler? OnError;
 
-    public static async Task Start(params WhisperSettings[] settings)
+    public static async Task Process(params WhisperSettings[] settings)
     {
-        foreach (var setting in settings) await Start(setting);
+        foreach (var setting in settings) await Process(setting);
     }
 
-    public static async Task Start(WhisperSettings settings)
+    public static async Task Process(WhisperSettings settings)
     {
         List<string> arguments =
         [

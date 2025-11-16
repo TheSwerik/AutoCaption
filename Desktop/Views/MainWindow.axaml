@@ -10,6 +10,7 @@
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
+        Width="1280" Height="720"
         Title="AutoCaption">
 
     <Design.DataContext>

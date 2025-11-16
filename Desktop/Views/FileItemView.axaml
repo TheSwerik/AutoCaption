@@ -34,28 +34,28 @@
                 </ExperimentalAcrylicBorder.Material>
             </ExperimentalAcrylicBorder>
 
-            <DockPanel Margin="10" LastChildFill="True">
+            <DockPanel Margin="10 10 10 0" LastChildFill="True">
                 <DockPanel LastChildFill="True" DockPanel.Dock="Top" Margin="0 0 0 10">
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
                         <Button IsEnabled="{Binding !IsInProgress}"
                                 Command="{Binding OpenEditCommand}">
                             Edit
                         </Button>
-                        <!-- <Button IsEnabled="{Binding !IsInProgress}" -->
                         <Button Command="{Binding DeleteCommand}">
                             X
                         </Button>
                     </StackPanel>
                     <Panel />
                 </DockPanel>
-
                 <ProgressBar DockPanel.Dock="Bottom"
                              IsVisible="{Binding IsInProgress}"
+                             Height="20"
                              Value="{Binding Progress}" />
 
                 <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
                            Text="{Binding Path}" />
             </DockPanel>
         </Panel>
+
     </Border>
 </UserControl>

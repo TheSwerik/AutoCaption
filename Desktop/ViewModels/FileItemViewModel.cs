@@ -52,6 +52,9 @@ public partial class FileItemViewModel : ViewModelBase
 
     public async Task Process()
     {
+        IsInProgress = true;
+
+        //TODO file splitting
         var inputFile = new MediaFile { Filename = Path };
         using (var engine = new Engine())
         {
@@ -67,12 +70,14 @@ public partial class FileItemViewModel : ViewModelBase
 
         var settings = new WhisperSettings(
             Path,
-            OutputLocation,
+            $"\"{OutputLocation}\"",
             Language
         );
-        await WhisperService.Start(settings);
+        await WhisperService.Process(settings);
 
         WhisperService.OnOutput -= progressHandler;
+
+        IsInProgress = false;
     }
 
     private void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration)
