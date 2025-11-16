@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:Desktop.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="viewModels:FileItemViewModel"
+             Width="200" Height="200"
+             x:Class="Desktop.Views.FileItemView">
+    <Design.DataContext>
+        <viewModels:FileItemViewModel />
+    </Design.DataContext>
+
+    <Border CornerRadius="10">
+        <Panel>
+            <ExperimentalAcrylicBorder IsHitTestVisible="False"
+                                       IsVisible="{Binding !IsCompleted}">
+                <ExperimentalAcrylicBorder.Material>
+                    <ExperimentalAcrylicMaterial
+                        BackgroundSource="Digger"
+                        TintColor="Black"
+                        TintOpacity="1"
+                        MaterialOpacity="0.9" />
+                </ExperimentalAcrylicBorder.Material>
+            </ExperimentalAcrylicBorder>
+            <ExperimentalAcrylicBorder IsHitTestVisible="False"
+                                       IsVisible="{Binding IsCompleted}">
+                <ExperimentalAcrylicBorder.Material>
+                    <ExperimentalAcrylicMaterial
+                        BackgroundSource="Digger"
+                        TintColor="Green"
+                        TintOpacity="1"
+                        MaterialOpacity="0.2" />
+                </ExperimentalAcrylicBorder.Material>
+            </ExperimentalAcrylicBorder>
+
+            <DockPanel Margin="10" LastChildFill="True">
+                <DockPanel LastChildFill="True" DockPanel.Dock="Top" Margin="0 0 0 10">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                        <Button IsEnabled="{Binding !IsInProgress}"
+                                Command="{Binding OpenEditCommand}">
+                            Edit
+                        </Button>
+                        <!-- <Button IsEnabled="{Binding !IsInProgress}" -->
+                        <Button IsEnabled="{Binding IsInProgress}"
+                                Command="{Binding DeleteCommand}">
+                            X
+                        </Button>
+                    </StackPanel>
+                    <Panel />
+                </DockPanel>
+
+                <ProgressBar DockPanel.Dock="Bottom"
+                             IsVisible="{Binding IsInProgress}"
+                             Value="{Binding Progress}" />
+
+                <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis">
+                    E:\YouTube\Tekken Controllers voice-german.flac
+                </TextBlock>
+            </DockPanel>
+        </Panel>
+    </Border>
+</UserControl>

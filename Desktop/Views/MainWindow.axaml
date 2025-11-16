@@ -9,6 +9,7 @@
         Icon="/Assets/avalonia-logo.ico"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
+        HorizontalAlignment="Stretch"
         Title="AutoCaption">
 
     <Design.DataContext>
@@ -17,45 +18,62 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="*,Auto,*" ColumnDefinitions="*,Auto,*">
-        <Panel Grid.Row="1" Grid.Column="1">
-            <ExperimentalAcrylicBorder IsHitTestVisible="False">
-                <ExperimentalAcrylicBorder.Material>
-                    <ExperimentalAcrylicMaterial
-                        BackgroundSource="Digger"
-                        TintColor="Black"
-                        TintOpacity="1"
-                        MaterialOpacity="0.65" />
-                </ExperimentalAcrylicBorder.Material>
-            </ExperimentalAcrylicBorder>
-            <Grid
-                RowDefinitions="5*,*,*,*,5*" ColumnDefinitions="5*,*,*,*,5*"
-                RowSpacing="5">
-                <Label Grid.Row="1" Grid.Column="1" Target="Files">Files:</Label>
-                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
-                         Name="Files"
-                         Height="100"
-                         AcceptsReturn="True" TextWrapping="Wrap"
-                         IsReadOnly="True"
-                         Text="{Binding FilesString}">
-                    <Interaction.Behaviors>
-                        <EventTriggerBehavior EventName="GotFocus">
-                            <InvokeCommandAction Command="{Binding SelectInputCommand}" />
-                        </EventTriggerBehavior>
-                    </Interaction.Behaviors>
-                </TextBox>
+    <!-- <Window.Resources> -->
+    <!--     <DataTemplate DataType="{x:Type vm:FileItemViewModel}"> -->
+    <!--         <ContentControl Content="{Binding .}" /> -->
+    <!--     </DataTemplate> -->
+    <!-- -->
+    <!--     <DataTemplate DataType="{x:Type vm:AddViewModel}"> -->
+    <!--         <ContentControl Content="{Binding .}" /> -->
+    <!--     </DataTemplate> -->
+    <!-- </Window.Resources> -->
 
-                <ProgressBar Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
-                             Value="{Binding Progress}" />
+    <Panel Margin="10 30 10 10">
+        <ExperimentalAcrylicBorder IsHitTestVisible="False">
+            <ExperimentalAcrylicBorder.Material>
+                <ExperimentalAcrylicMaterial
+                    BackgroundSource="Digger"
+                    TintColor="Black"
+                    TintOpacity="1"
+                    MaterialOpacity="0.65" />
+            </ExperimentalAcrylicBorder.Material>
+        </ExperimentalAcrylicBorder>
 
-                <Button Grid.Row="4" Grid.Column="2"
-                        IsEnabled="{Binding !IsInProgress}"
-                        Command="{Binding StartCommand}">
-                    Start
-                </Button>
+        <DockPanel Margin="20"
+                   HorizontalAlignment="Stretch"
+                   VerticalAlignment="Stretch"
+                   LastChildFill="True">
 
-            </Grid>
-        </Panel>
-    </Grid>
+            <Button HorizontalAlignment="Right"
+                    Width="100"
+                    DockPanel.Dock="Bottom"
+                    HorizontalContentAlignment="Center"
+                    IsEnabled="{Binding !IsInProgress}"
+                    Command="{Binding StartCommand}">
+                Start
+            </Button>
+
+            <StackPanel Spacing="5"
+                        VerticalAlignment="Stretch">
+
+                <Label Target="Files">Files:</Label>
+                <ItemsControl ItemsSource="{Binding FileItems}" Name="Files">
+
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:ViewModelBase}">
+                            <ContentControl Content="{Binding .}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" ItemSpacing="10" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+
+        </DockPanel>
+    </Panel>
 
 </Window>

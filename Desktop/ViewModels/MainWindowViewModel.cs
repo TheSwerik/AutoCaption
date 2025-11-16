@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ public partial class MainWindowViewModel : ViewModelBase
         Title = "Input Files"
     };
 
+    [ObservableProperty] private ObservableCollection<ViewModelBase> _fileItems = [new AddViewModel()];
+
     [ObservableProperty] private string _filesString = "";
     [ObservableProperty] private bool _isInProgress;
     [ObservableProperty] private double _progress = 50;
@@ -35,6 +38,12 @@ public partial class MainWindowViewModel : ViewModelBase
         var input = await topLevel.StorageProvider.OpenFilePickerAsync(InputOpt);
 
         Files = input.Select(f => f.Path.LocalPath).ToList();
+        FileItems = new ObservableCollection<ViewModelBase>(input.Select(f => new FileItemViewModel
+        {
+            FilesString = f.Path.LocalPath,
+            IsInProgress = false,
+            Progress = 0
+        }).ToList()) { new AddViewModel() };
         FilesString = string.Join('\n', Files);
     }
 
@@ -47,9 +56,16 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             foreach (var file in Files)
             {
+                var inputFile = new MediaFile { Filename = file };
+                using (var engine = new Engine())
+                {
+                    engine.GetMetadata(inputFile);
+                }
+
+
                 DataReceivedEventHandler progressHandler = delegate(object _, DataReceivedEventArgs args)
                 {
-                    CalculateProgress(args, file);
+                    CalculateProgress(args, inputFile.Metadata.Duration);
                 };
                 WhisperService.OnOutput += progressHandler;
 
@@ -73,22 +89,15 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private void CalculateProgress(DataReceivedEventArgs args, string file)
+    private void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration)
     {
         if (args.Data is null) return;
 
-        var inputFile = new MediaFile { Filename = file };
-        using (var engine = new Engine())
-        {
-            engine.GetMetadata(inputFile);
-        }
-
-        var totalLength = inputFile.Metadata.Duration;
-
         var lastLine = args.Data.Split('\n').Last();
         var timestampString = lastLine.Split(']').First().Split(' ').Last();
+        if (timestampString.Count(':') == 1) timestampString = $"00:{timestampString}";
         var timestamp = TimeSpan.Parse(timestampString);
 
-        Progress = timestamp / totalLength;
+        Progress = timestamp / totalDuration * 100.0;
     }
 }

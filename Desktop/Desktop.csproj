@@ -25,7 +25,14 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
         <PackageReference Include="MediaToolkit" Version="1.1.0.1"/>
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0"/>
         <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.8.2"/>
         <PackageReference Include="Xaml.Behaviors.Interactivity" Version="11.3.8.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AvaloniaXaml Include="Views\AddView.axaml.cs">
+            <SubType>Designer</SubType>
+        </AvaloniaXaml>
     </ItemGroup>
 </Project>
