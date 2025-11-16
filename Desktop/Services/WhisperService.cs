@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Desktop.Services;
@@ -15,7 +16,7 @@ public static class WhisperService
         foreach (var setting in settings) await Process(setting);
     }
 
-    public static async Task Process(WhisperSettings settings)
+    public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
         List<string> arguments =
         [
@@ -50,7 +51,7 @@ public static class WhisperService
         proc.BeginOutputReadLine();
         proc.BeginErrorReadLine();
 
-        await proc.WaitForExitAsync();
+        await proc.WaitForExitAsync(ct);
 
         if (proc.ExitCode != 0) throw new Exception("Python Exitcode: " + proc.ExitCode);
     }

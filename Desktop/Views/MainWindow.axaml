@@ -33,14 +33,27 @@
                    VerticalAlignment="Stretch"
                    LastChildFill="True">
 
-            <Button HorizontalAlignment="Right"
-                    Width="100"
-                    DockPanel.Dock="Bottom"
-                    HorizontalContentAlignment="Center"
-                    IsEnabled="{Binding !IsInProgress}"
-                    Command="{Binding StartCommand}">
-                Start
-            </Button>
+
+            <StackPanel HorizontalAlignment="Right"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Horizontal">
+
+                <Button HorizontalAlignment="Right"
+                        Width="100"
+                        HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding !IsInProgress}"
+                        Command="{Binding StartCommand}">
+                    Start
+                </Button>
+
+                <Button HorizontalAlignment="Right"
+                        Width="100"
+                        HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding IsInProgress}"
+                        Command="{Binding CancelCommand}">
+                    Cancel
+                </Button>
+            </StackPanel>
 
             <StackPanel Spacing="5"
                         VerticalAlignment="Stretch">

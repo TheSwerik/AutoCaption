@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -50,7 +51,7 @@ public partial class FileItemViewModel : ViewModelBase
         WeakReferenceMessenger.Default.Send(new RemoveInputFileMessage(Path));
     }
 
-    public async Task Process()
+    public async Task Process(CancellationToken token)
     {
         if (IsCompleted || IsInProgress) return;
 
@@ -84,13 +85,21 @@ public partial class FileItemViewModel : ViewModelBase
             $"\"{OutputLocation}\"",
             Language
         );
-        await WhisperService.Process(settings);
-
-        WhisperService.OnOutput -= progressHandler;
-
-        Progress = 100.0;
-        IsCompleted = true;
-        IsInProgress = false;
+        try
+        {
+            await WhisperService.Process(settings, token);
+            Progress = 100.0;
+            IsCompleted = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message + '\n' + ex.StackTrace);
+        }
+        finally
+        {
+            WhisperService.OnOutput -= progressHandler;
+            IsInProgress = false;
+        }
     }
 
     private void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration)

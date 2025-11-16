@@ -3,23 +3,22 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Desktop.Services;
 using Desktop.Views;
-using MediaToolkit;
-using MediaToolkit.Model;
 
 namespace Desktop.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    [ObservableProperty] private ObservableCollection<FileItemViewModel> _files = [];
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
     [ObservableProperty] private ObservableCollection<ViewModelBase> _fileItems = [new AddViewModel()];
+    [ObservableProperty] private ObservableCollection<FileItemViewModel> _files = [];
 
     [ObservableProperty] private string _filesString = "";
     [ObservableProperty] private bool _isInProgress;
@@ -66,12 +65,22 @@ public partial class MainWindowViewModel : ViewModelBase
         IsInProgress = true;
         try
         {
-            for (var i = 0; i <= Files.Count; i++) await Files[i].Process();
+            for (var i = 0; i <= Files.Count; i++)
+            {
+                if (_cancellationTokenSource.IsCancellationRequested) break;
+                await Files[i].Process(_cancellationTokenSource.Token);
+            }
         }
         finally
         {
             IsInProgress = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task Cancel()
+    {
+        await _cancellationTokenSource.CancelAsync();
     }
 
     private void AddFiles(IEnumerable<string> files)
@@ -85,7 +94,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private void RemoveFile(string path)
     {
         var file = Files.FirstOrDefault(f => f.Path.Equals(path));
-        if(file is null) return;
+        if (file is null) return;
         Files.Remove(file);
         RegenerateFileViews();
     }
