@@ -52,6 +52,8 @@ public partial class FileItemViewModel : ViewModelBase
 
     public async Task Process()
     {
+        if (IsCompleted || IsInProgress) return;
+
         IsInProgress = true;
 
         //TODO file splitting
@@ -59,6 +61,15 @@ public partial class FileItemViewModel : ViewModelBase
         using (var engine = new Engine())
         {
             engine.GetMetadata(inputFile);
+        }
+
+        if (inputFile.Metadata.Duration > TimeSpan.FromMinutes(20))
+        {
+            //TODO convert file to temp.wav file
+            //TODO split temp.wav file into 20min chunks
+            //TODO process each chunk (temp.chunk1.wav, tempchunkN.wav)
+            //TODO combine each chunk temp1 + temp2+1xOffset + temp3+2xOffset, etc
+            // https://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold#:~:text=Here%20is%20a%20working%20code.
         }
 
         DataReceivedEventHandler progressHandler = delegate(object _, DataReceivedEventArgs args)
@@ -77,6 +88,8 @@ public partial class FileItemViewModel : ViewModelBase
 
         WhisperService.OnOutput -= progressHandler;
 
+        Progress = 100.0;
+        IsCompleted = true;
         IsInProgress = false;
     }
 

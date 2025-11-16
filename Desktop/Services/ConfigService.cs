@@ -148,6 +148,16 @@ public static class ConfigService
                 Save();
             }
         } = "";
+
+        public TimeSpan ChunkSize
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = TimeSpan.FromMinutes(20);
     }
 }
 
