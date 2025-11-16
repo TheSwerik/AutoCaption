@@ -2,7 +2,7 @@ using Avalonia.Controls;
 
 namespace Desktop.Views;
 
-public class AddView : UserControl
+public partial class AddView : UserControl
 {
     public AddView()
     {
