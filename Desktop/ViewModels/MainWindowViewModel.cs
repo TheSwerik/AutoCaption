@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -19,20 +18,44 @@ namespace Desktop.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    public MainWindowViewModel()
-    {
-    }
-    private static readonly FilePickerOpenOptions InputOpt = new()
-    {
-        AllowMultiple = true,
-        Title = "Input Files"
-    };
-
     [ObservableProperty] private ObservableCollection<ViewModelBase> _fileItems = [new AddViewModel()];
 
     [ObservableProperty] private string _filesString = "";
     [ObservableProperty] private bool _isInProgress;
     [ObservableProperty] private double _progress = 50;
+
+    public MainWindowViewModel()
+    {
+        if (Design.IsDesignMode) return;
+
+
+        WeakReferenceMessenger.Default.Register<MainWindowViewModel, AddInputFilesMessage>(this, async void (_, _) =>
+        {
+            var mainWindow = App.Windows.First(w => w is MainWindow);
+            var topLevel = TopLevel.GetTopLevel(mainWindow) ?? throw new UnreachableException();
+
+            var inputOptions = new FilePickerOpenOptions
+            {
+                AllowMultiple = true,
+                Title = "Input Files"
+            };
+            var input = await topLevel.StorageProvider.OpenFilePickerAsync(inputOptions);
+            var files = input.Select(f => f.Path.LocalPath);
+            AddFiles(files);
+        });
+
+        WeakReferenceMessenger.Default.Register<MainWindowViewModel, RemoveInputFileMessage>(this,
+            void (_, m) => RemoveFile(m.Path));
+
+        WeakReferenceMessenger.Default.Register<MainWindowViewModel, EditInputFileMessage>(this, async void (_, m) =>
+        {
+            var mainWindow = App.Windows.First(w => w is MainWindow);
+            var dialog = new FileItemSettingsWindow { DataContext = new FileItemSettingsViewModel(m.File) };
+            var response = await dialog.ShowDialog<bool?>(mainWindow);
+            Console.WriteLine("RESPONSE: " + response);
+        });
+    }
+
     private List<string> Files { get; set; } = [];
 
     [RelayCommand]

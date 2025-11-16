@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 
@@ -13,15 +12,18 @@ public partial class FileItemViewModel : ViewModelBase
     [ObservableProperty] private double _progress;
 
     [RelayCommand]
-    private async Task OpenEdit()
+    private void OpenEdit()
     {
-        IsInProgress = !IsInProgress;
-        IsCompleted = !IsCompleted;
+        WeakReferenceMessenger.Default.Send(new EditInputFileMessage(this));
     }
 
     [RelayCommand]
-    private async Task Delete()
+    private void Delete()
     {
+        if (IsInProgress)
+            //TODO are you sure?
+            return;
+
         WeakReferenceMessenger.Default.Send(new RemoveInputFileMessage(FileString));
     }
 }

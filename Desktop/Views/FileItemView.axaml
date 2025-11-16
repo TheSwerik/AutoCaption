@@ -42,8 +42,7 @@
                             Edit
                         </Button>
                         <!-- <Button IsEnabled="{Binding !IsInProgress}" -->
-                        <Button IsEnabled="{Binding IsInProgress}"
-                                Command="{Binding DeleteCommand}">
+                        <Button Command="{Binding DeleteCommand}">
                             X
                         </Button>
                     </StackPanel>
@@ -55,7 +54,7 @@
                              Value="{Binding Progress}" />
 
                 <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                           Text="{Binding FileString}"/>
+                           Text="{Binding FileString}" />
             </DockPanel>
         </Panel>
     </Border>
