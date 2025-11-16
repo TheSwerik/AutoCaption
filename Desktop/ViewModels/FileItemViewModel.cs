@@ -91,6 +91,10 @@ public partial class FileItemViewModel : ViewModelBase
             Progress = 100.0;
             IsCompleted = true;
         }
+        catch (TaskCanceledException)
+        {
+            Console.WriteLine($"Cancelled {Path}");
+        }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message + '\n' + ex.StackTrace);
