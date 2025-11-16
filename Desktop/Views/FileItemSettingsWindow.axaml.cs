@@ -2,7 +2,7 @@
 
 namespace Desktop.Views;
 
-public class FileItemSettingsWindow : Window
+public partial class FileItemSettingsWindow : Window
 {
     public FileItemSettingsWindow()
     {
