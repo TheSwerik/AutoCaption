@@ -42,7 +42,11 @@ public partial class FileItemViewModel : ViewModelBase
     [RelayCommand]
     private async Task Delete()
     {
-        if (!IsInProgress) WeakReferenceMessenger.Default.Send(new RemoveInputFileMessage(Path));
+        if (!IsInProgress)
+        {
+            WeakReferenceMessenger.Default.Send(new RemoveInputFileMessage(Path));
+            return;
+        }
 
         var mainWindow = App.Windows.First(w => w is MainWindow);
         var dialog = new ConfirmationWindow
