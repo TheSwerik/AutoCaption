@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,8 +7,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Desktop.Services;
 using Desktop.Views;
-using MediaToolkit;
-using MediaToolkit.Model;
 
 namespace Desktop.ViewModels;
 
@@ -68,38 +65,11 @@ public partial class FileItemViewModel : ViewModelBase
     {
         if (IsCompleted || IsInProgress) return;
 
-        IsInProgress = true;
-
-        var inputFile = new MediaFile { Filename = Path };
-        using (var engine = new Engine())
-        {
-            engine.GetMetadata(inputFile);
-        }
-
-        //file splitting
-        if (inputFile.Metadata.Duration > TimeSpan.FromMinutes(30))
-        {
-            //TODO convert file to temp.wav file
-            //TODO split temp.wav file into 20min chunks
-            //TODO process each chunk (temp.chunk1.wav, tempchunkN.wav)
-            //TODO combine each chunk temp1 + temp2+1xOffset + temp3+2xOffset, etc
-            // https://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold#:~:text=Here%20is%20a%20working%20code.
-        }
-
-        DataReceivedEventHandler progressHandler = delegate(object _, DataReceivedEventArgs args)
-        {
-            CalculateProgress(args, inputFile.Metadata.Duration);
-        };
-
-        WhisperService.OnOutput += progressHandler;
-
-        var settings = new WhisperSettings(
-            Path,
-            $"\"{OutputLocation}\"",
-            Language
-        );
         try
         {
+            IsInProgress = true;
+            var settings = new WhisperSettings(Path, $"\"{OutputLocation}\"", Language);
+            WhisperService.OnProgress += OnProgress;
             await WhisperService.Process(settings, token);
             Progress = 100.0;
             IsCompleted = true;
@@ -114,20 +84,13 @@ public partial class FileItemViewModel : ViewModelBase
         }
         finally
         {
-            WhisperService.OnOutput -= progressHandler;
+            WhisperService.OnProgress -= OnProgress;
             IsInProgress = false;
         }
     }
 
-    private void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration)
+    private void OnProgress(object _, ProgressEventArgs args)
     {
-        if (args.Data is null) return;
-
-        var lastLine = args.Data.Split('\n').Last();
-        var timestampString = lastLine.Split(']').First().Split(' ').Last();
-        if (timestampString.Count(':') == 1) timestampString = $"00:{timestampString}";
-        var timestamp = TimeSpan.Parse(timestampString);
-
-        Progress = timestamp / totalDuration * 100.0;
+        Progress = args.Value;
     }
 }
