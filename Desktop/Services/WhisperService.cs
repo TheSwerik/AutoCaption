@@ -53,10 +53,20 @@ public static partial class WhisperService
             }
 
             // recombine segments
-            var segmentFiles = Enumerable.Range(0, segments).Select(i => $"\"{tempPath}/segment-{i}.vtt\"");
-            //TODO detect different FileTypes
-            var outputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.vtt";
-            await CombineVtt(maxDuration, outputFile, segmentFiles);
+            if (ConfigService.Config.OutputFormat == OutputFormat.ALL)
+            {
+                //TODO yikes
+            }
+            else
+            {
+                var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
+                var segmentFiles = Enumerable.Range(0, segments)
+                    .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
+                //TODO detect different FileTypes
+                var outputFile =
+                    $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                await Combine(maxDuration, outputFile, segmentFiles);
+            }
         }
         finally
         {
@@ -212,8 +222,19 @@ public static partial class WhisperService
         return string.IsNullOrWhiteSpace(output);
     }
 
-    private static async Task CombineVtt(TimeSpan segemntDuration, string output, params IEnumerable<string> input)
+    private static async Task Combine(TimeSpan segemntDuration, string output, params IEnumerable<string> input)
     {
+        var timeStampRegex = ConfigService.Config.OutputFormat switch
+        {
+            OutputFormat.VTT => TimestampRegex(),
+            OutputFormat.JSON => TimestampRegex(), //TODO
+            OutputFormat.TXT => TimestampRegex(), //TODO
+            OutputFormat.SRT => TimestampRegex(), //TODO
+            OutputFormat.TSV => TimestampRegex(), //TODO
+            OutputFormat.ALL => throw new UnreachableException(),
+            _ => throw new UnreachableException()
+        };
+
         var skip = false;
         var lines = new List<string>();
         var i = 0;
@@ -233,12 +254,13 @@ public static partial class WhisperService
                     continue;
                 }
 
-                if (!TimestampRegex().IsMatch(line))
+                if (!timeStampRegex.IsMatch(line))
                 {
                     lines.Add(line);
                     continue;
                 }
 
+                //TODO for other fileTypes
                 var timestamps = line.Split(" --> ")
                     .Select(t => t.Count(c => c == ':') > 1 ? t : $"00:{t}")
                     .Select(TimeSpan.Parse)
