@@ -17,6 +17,7 @@ public static partial class WhisperService
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
+        //TODO revert testing:
         // var maxDuration = TimeSpan.FromMinutes(30);
         var maxDuration = TimeSpan.FromMinutes(1);
 
@@ -32,28 +33,35 @@ public static partial class WhisperService
             return;
         }
 
-        // split file into 30min segments
         var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
-        await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
-        var ext = Path.GetExtension(settings.FilePath);
-
-        // process each segment
-        var segments = (int)Math.Ceiling(inputFile.Metadata.Duration / maxDuration);
-        for (var i = 0; i < segments; i++)
+        try
         {
-            var segmentSettings = new WhisperSettings(
-                $"\"{tempPath}/segment-{i}{ext}\"",
-                $"\"{tempPath}/\"",
-                settings.Language
-            );
-            await Process(segmentSettings, inputFile.Metadata.Duration, ct);
-        }
+            // split file into 30min segments
+            await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
+            var ext = Path.GetExtension(settings.FilePath);
 
-        // recombine segments
-        var segmentFiles = Enumerable.Range(0, segments).Select(i => $"\"{tempPath}/segment-{i}.vtt\"");
-        //TODO detect different FileTypes
-        var outputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.vtt";
-        await CombineVtt(maxDuration, outputFile, segmentFiles);
+            // process each segment
+            var segments = (int)Math.Ceiling(inputFile.Metadata.Duration / maxDuration);
+            for (var i = 0; i < segments; i++)
+            {
+                var segmentSettings = new WhisperSettings(
+                    $"\"{tempPath}/segment-{i}{ext}\"",
+                    $"\"{tempPath}/\"",
+                    settings.Language
+                );
+                await Process(segmentSettings, inputFile.Metadata.Duration, ct);
+            }
+
+            // recombine segments
+            var segmentFiles = Enumerable.Range(0, segments).Select(i => $"\"{tempPath}/segment-{i}.vtt\"");
+            //TODO detect different FileTypes
+            var outputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.vtt";
+            await CombineVtt(maxDuration, outputFile, segmentFiles);
+        }
+        finally
+        {
+            Directory.Delete(tempPath, true);
+        }
     }
 
     private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, CancellationToken ct)
