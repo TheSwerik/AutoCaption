@@ -18,7 +18,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private CancellationTokenSource _cancellationTokenSource = new();
     [ObservableProperty] private ObservableCollection<ViewModelBase> _fileItems = [new AddViewModel()];
-    [ObservableProperty] private ObservableCollection<FileItemViewModel> _files = [];
+
+    [ObservableProperty] private ObservableCollection<FileItemViewModel>
+        _files = []; //TODO save files as session, especially when YouTube scraping becomes a part of this
 
     [ObservableProperty] private string _filesString = "";
     [ObservableProperty] private bool _isInProgress;

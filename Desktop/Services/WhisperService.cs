@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaToolkit;
@@ -10,13 +11,14 @@ using MediaToolkit.Model;
 
 namespace Desktop.Services;
 
-public static class WhisperService
+public static partial class WhisperService
 {
     public static event ProgressEventHandler? OnProgress;
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
-        var maxTime = TimeSpan.FromMinutes(30);
+        // var maxDuration = TimeSpan.FromMinutes(30);
+        var maxDuration = TimeSpan.FromMinutes(1);
 
         var inputFile = new MediaFile { Filename = settings.FilePath };
         using (var engine = new Engine())
@@ -24,30 +26,34 @@ public static class WhisperService
             engine.GetMetadata(inputFile);
         }
 
-        if (inputFile.Metadata.Duration < maxTime)
+        if (inputFile.Metadata.Duration < maxDuration)
         {
             await Process(settings, inputFile.Metadata.Duration, ct);
             return;
         }
 
-        //Split file into 30min segments and recombine at the end
-
+        // split file into 30min segments
         var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
-        await SplitFile(settings.FilePath, tempPath, maxTime, ct);
+        await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
+        var ext = Path.GetExtension(settings.FilePath);
 
-        var segments = (int)Math.Ceiling(inputFile.Metadata.Duration / maxTime);
+        // process each segment
+        var segments = (int)Math.Ceiling(inputFile.Metadata.Duration / maxDuration);
         for (var i = 0; i < segments; i++)
         {
-            var segementSettings = new WhisperSettings(
-                $"\"{tempPath}/segment{i}\"",
+            var segmentSettings = new WhisperSettings(
+                $"\"{tempPath}/segment-{i}{ext}\"",
                 $"\"{tempPath}/\"",
                 settings.Language
             );
-            await Process(segementSettings, inputFile.Metadata.Duration, ct);
+            await Process(segmentSettings, inputFile.Metadata.Duration, ct);
         }
 
-        //TODO combine each segments temp1 + temp2+1xOffset + temp3+2xOffset, etc
-        Directory.Delete(tempPath, true);
+        // recombine segments
+        var segmentFiles = Enumerable.Range(0, segments).Select(i => $"\"{tempPath}/segment-{i}.vtt\"");
+        //TODO detect different FileTypes
+        var outputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.vtt";
+        await CombineVtt(maxDuration, outputFile, segmentFiles);
     }
 
     private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, CancellationToken ct)
@@ -101,6 +107,7 @@ public static class WhisperService
 
     private static void OutputReceived(object sender, DataReceivedEventArgs e)
     {
+        //TODO log properly
         Console.WriteLine(sender + " " + e.Data);
     }
 
@@ -111,6 +118,7 @@ public static class WhisperService
         //TODO fix for chunked data
         var lastLine = args.Data.Split('\n').Last();
         var timestampString = lastLine.Split(']').First().Split(' ').Last();
+        if (timestampString.Count(':') < 1) return;
         if (timestampString.Count(':') == 1) timestampString = $"00:{timestampString}";
         var timestamp = TimeSpan.Parse(timestampString);
 
@@ -127,7 +135,8 @@ public static class WhisperService
     {
         Directory.CreateDirectory(tempPath);
 
-        var outputTemplate = Path.Combine(tempPath, "segment%d");
+        var ext = Path.GetExtension(path);
+        var outputTemplate = Path.Combine(tempPath, $"segment-%d{ext}");
 
         string[] arguments =
         [
@@ -169,6 +178,8 @@ public static class WhisperService
 
         await proc.WaitForExitAsync(ct);
 
+        if (proc.ExitCode != 0) throw new Exception("FFmpeg Exitcode: " + proc.ExitCode);
+
         Console.WriteLine("ffmpeg");
         Console.WriteLine(string.Join('\n', Directory.GetFiles(tempPath)));
     }
@@ -192,6 +203,51 @@ public static class WhisperService
 
         return string.IsNullOrWhiteSpace(output);
     }
+
+    private static async Task CombineVtt(TimeSpan segemntDuration, string output, params IEnumerable<string> input)
+    {
+        var skip = false;
+        var lines = new List<string>();
+        var i = 0;
+        foreach (var file in input)
+        {
+            foreach (var line in await File.ReadAllLinesAsync(file.Replace("\"", "")))
+            {
+                if (skip)
+                {
+                    skip = false;
+                    continue;
+                }
+
+                if (line == "WEBVTT")
+                {
+                    skip = true;
+                    continue;
+                }
+
+                if (!TimestampRegex().IsMatch(line))
+                {
+                    lines.Add(line);
+                    continue;
+                }
+
+                var timestamps = line.Split(" --> ")
+                    .Select(t => t.Count(c => c == ':') > 1 ? t : $"00:{t}")
+                    .Select(TimeSpan.Parse)
+                    .Select(t => t + i * segemntDuration)
+                    .Select(t => t.ToString("G"));
+                lines.Add(string.Join(" --> ", timestamps));
+            }
+
+            i++;
+        }
+
+        await File.WriteAllLinesAsync(output.Replace("\"", ""), lines);
+        Console.WriteLine(output);
+    }
+
+    [GeneratedRegex(@"(\d\d:)+(\d\d.\d+) --> (\d\d:)+(\d\d.\d+)")]
+    private static partial Regex TimestampRegex();
 }
 
 public record WhisperSettings(string FilePath, string OutputLocation, string Language);
