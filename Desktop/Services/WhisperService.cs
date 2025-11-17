@@ -30,20 +30,24 @@ public static class WhisperService
             return;
         }
 
-        #region Split file into 30min temp files
+        //Split file into 30min segments and recombine at the end
 
         var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
         await SplitFile(settings.FilePath, tempPath, maxTime, ct);
 
+        var segments = (int)Math.Ceiling(inputFile.Metadata.Duration / maxTime);
+        for (var i = 0; i < segments; i++)
+        {
+            var segementSettings = new WhisperSettings(
+                $"\"{tempPath}/segment{i}\"",
+                $"\"{tempPath}/\"",
+                settings.Language
+            );
+            await Process(segementSettings, inputFile.Metadata.Duration, ct);
+        }
 
+        //TODO combine each segments temp1 + temp2+1xOffset + temp3+2xOffset, etc
         Directory.Delete(tempPath, true);
-
-        #endregion
-
-        //file splitting
-        //TODO process each chunk (temp.chunk1.wav, tempchunkN.wav)
-        //TODO combine each chunk temp1 + temp2+1xOffset + temp3+2xOffset, etc
-        // https://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold#:~:text=Here%20is%20a%20working%20code.
     }
 
     private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, CancellationToken ct)
@@ -104,6 +108,7 @@ public static class WhisperService
     {
         if (args.Data is null) return;
 
+        //TODO fix for chunked data
         var lastLine = args.Data.Split('\n').Last();
         var timestampString = lastLine.Split(']').First().Split(' ').Last();
         if (timestampString.Count(':') == 1) timestampString = $"00:{timestampString}";
@@ -122,8 +127,7 @@ public static class WhisperService
     {
         Directory.CreateDirectory(tempPath);
 
-        var ext = Path.GetExtension(path);
-        var outputTemplate = Path.Combine(tempPath, $"segment-%03d{ext}");
+        var outputTemplate = Path.Combine(tempPath, "segment%d");
 
         string[] arguments =
         [
