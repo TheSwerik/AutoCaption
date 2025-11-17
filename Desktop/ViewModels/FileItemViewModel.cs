@@ -70,14 +70,14 @@ public partial class FileItemViewModel : ViewModelBase
 
         IsInProgress = true;
 
-        //TODO file splitting
         var inputFile = new MediaFile { Filename = Path };
         using (var engine = new Engine())
         {
             engine.GetMetadata(inputFile);
         }
 
-        if (inputFile.Metadata.Duration > TimeSpan.FromMinutes(20))
+        //file splitting
+        if (inputFile.Metadata.Duration > TimeSpan.FromMinutes(30))
         {
             //TODO convert file to temp.wav file
             //TODO split temp.wav file into 20min chunks

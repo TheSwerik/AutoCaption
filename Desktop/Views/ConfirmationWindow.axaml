@@ -3,24 +3,26 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:Desktop.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
         x:Class="Desktop.Views.ConfirmationWindow"
         x:DataType="viewModels:ConfirmationViewModel"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
-        Width="450" Height="300"
+        MinWidth="150" MaxWidth="450"
+        MinHeight="150" MaxHeight="450"
+        Width="450" Height="200"
         Title="{Binding Title}">
     <Design.DataContext>
         <viewModels:ConfirmationViewModel />
     </Design.DataContext>
 
-    <DockPanel LastChildFill="True">
-        <StackPanel Orientation="Horizontal">
+    <DockPanel LastChildFill="True" Margin="10 30 10 10">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Spacing="5">
             <Button Command="{Binding YesCommand}">Yes</Button>
             <Button Command="{Binding NoCommand}">No</Button>
         </StackPanel>
 
-        <TextBlock Text="{Binding Message}" />
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
     </DockPanel>
 </Window>
