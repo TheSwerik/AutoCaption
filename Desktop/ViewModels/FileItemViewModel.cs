@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Desktop.Services;
+using Desktop.Views;
 using MediaToolkit;
 using MediaToolkit.Model;
 
@@ -42,13 +43,25 @@ public partial class FileItemViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Delete()
+    private async Task Delete()
     {
-        if (IsInProgress)
-            //TODO are you sure?
-            return;
+        if (!IsInProgress) WeakReferenceMessenger.Default.Send(new RemoveInputFileMessage(Path));
 
+        var mainWindow = App.Windows.First(w => w is MainWindow);
+        var dialog = new ConfirmationWindow
+        {
+            DataContext = new ConfirmationViewModel("Are you  sure?",
+                "The File is currently being processed. Deleting the File from the view, will cancel the processing. Do you want to proceed?")
+        };
+        App.Windows.Add(dialog);
+        var response = await dialog.ShowDialog<bool?>(mainWindow);
+        App.Windows.Remove(dialog);
+
+        if (!response ?? false) return;
+
+        WeakReferenceMessenger.Default.Send(new CancelMessage());
         WeakReferenceMessenger.Default.Send(new RemoveInputFileMessage(Path));
+        WeakReferenceMessenger.Default.Send(new StartMessage(true));
     }
 
     public async Task Process(CancellationToken token)

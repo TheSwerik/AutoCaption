@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="Desktop/Views/ConfirmationWindow.axaml" value="Desktop/Desktop.csproj" />
+        <entry key="Desktop/Views/FileItemSettingsWindow.axaml" value="Desktop/Desktop.csproj" />
+        <entry key="Desktop/Views/FileItemView.axaml" value="Desktop/Desktop.csproj" />
+        <entry key="Desktop/Views/MainWindow.axaml" value="Desktop/Desktop.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

@@ -14,9 +14,9 @@ using Desktop.Views;
 
 namespace Desktop.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private CancellationTokenSource _cancellationTokenSource = new();
     [ObservableProperty] private ObservableCollection<ViewModelBase> _fileItems = [new AddViewModel()];
     [ObservableProperty] private ObservableCollection<FileItemViewModel> _files = [];
 
@@ -57,16 +57,35 @@ public partial class MainWindowViewModel : ViewModelBase
                 App.Windows.Remove(dialog);
                 Console.WriteLine("RESPONSE: " + response);
             });
+
+        WeakReferenceMessenger.Default.Register<MainWindowViewModel, CancelMessage>(this,
+            async void (vm, _) => await vm.Cancel());
+        WeakReferenceMessenger.Default.Register<MainWindowViewModel, StartMessage>(this,
+            async void (vm, m) =>
+            {
+                while (m.WaitUntilReady && IsInProgress) await Task.Delay(50);
+                await vm.Start();
+            });
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource.Dispose();
     }
 
     [RelayCommand]
     private async Task Start()
     {
+        if (IsInProgress) return;
+
+        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource = new CancellationTokenSource();
         IsInProgress = true;
         try
         {
             for (var i = 0; i <= Files.Count; i++)
             {
+                if (i >= Files.Count) break;
                 if (_cancellationTokenSource.IsCancellationRequested) break;
                 await Files[i].Process(_cancellationTokenSource.Token);
             }

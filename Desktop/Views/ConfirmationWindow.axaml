@@ -1,0 +1,26 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:Desktop.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="Desktop.Views.ConfirmationWindow"
+        x:DataType="viewModels:ConfirmationViewModel"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        WindowStartupLocation="CenterScreen"
+        HorizontalAlignment="Stretch"
+        Width="450" Height="300"
+        Title="{Binding Title}">
+    <Design.DataContext>
+        <viewModels:ConfirmationViewModel />
+    </Design.DataContext>
+
+    <DockPanel LastChildFill="True">
+        <StackPanel Orientation="Horizontal">
+            <Button Command="{Binding YesCommand}">Yes</Button>
+            <Button Command="{Binding NoCommand}">No</Button>
+        </StackPanel>
+
+        <TextBlock Text="{Binding Message}" />
+    </DockPanel>
+</Window>
