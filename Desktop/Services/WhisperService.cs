@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,23 +16,34 @@ public static class WhisperService
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
+        var maxTime = TimeSpan.FromMinutes(30);
+
         var inputFile = new MediaFile { Filename = settings.FilePath };
         using (var engine = new Engine())
         {
             engine.GetMetadata(inputFile);
         }
 
-        //file splitting
-        if (inputFile.Metadata.Duration > TimeSpan.FromMinutes(30))
+        if (inputFile.Metadata.Duration < maxTime)
         {
-            //TODO convert file to temp.wav file
-            //TODO split temp.wav file into 20min chunks
-            //TODO process each chunk (temp.chunk1.wav, tempchunkN.wav)
-            //TODO combine each chunk temp1 + temp2+1xOffset + temp3+2xOffset, etc
-            // https://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold#:~:text=Here%20is%20a%20working%20code.
+            await Process(settings, inputFile.Metadata.Duration, ct);
+            return;
         }
 
-        await Process(settings, inputFile.Metadata.Duration, ct);
+        #region Split file into 30min temp files
+
+        var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
+        await SplitFile(settings.FilePath, tempPath, maxTime, ct);
+
+
+        Directory.Delete(tempPath, true);
+
+        #endregion
+
+        //file splitting
+        //TODO process each chunk (temp.chunk1.wav, tempchunkN.wav)
+        //TODO combine each chunk temp1 + temp2+1xOffset + temp3+2xOffset, etc
+        // https://stackoverflow.com/questions/36632511/split-audio-file-into-several-files-each-below-a-size-threshold#:~:text=Here%20is%20a%20working%20code.
     }
 
     private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, CancellationToken ct)
@@ -104,6 +116,77 @@ public static class WhisperService
     private static void ErrorReceived(object sender, DataReceivedEventArgs e)
     {
         Console.WriteLine("ERROR: " + sender + " " + e.Data);
+    }
+
+    private static async Task SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
+    {
+        Directory.CreateDirectory(tempPath);
+
+        var ext = Path.GetExtension(path);
+        var outputTemplate = Path.Combine(tempPath, $"segment-%03d{ext}");
+
+        string[] arguments =
+        [
+            $"-i \"{path}\"",
+            await IsAudio(path, ct) ? "" : "-vn -acodec copy",
+            "-f segment",
+            $"-segment_time {maxTime.TotalSeconds}",
+            "-reset_timestamps 1",
+            $"\"{outputTemplate}\""
+        ];
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "ffmpeg",
+            Arguments = string.Join(' ', arguments),
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var proc = new Process();
+        proc.StartInfo = startInfo;
+        proc.EnableRaisingEvents = true;
+
+        proc.ErrorDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data)) Console.WriteLine("ERROR: " + e.Data);
+        };
+
+        proc.OutputDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrEmpty(e.Data)) Console.WriteLine("OUTPUT: " + e.Data);
+        };
+
+        proc.Start();
+        proc.BeginErrorReadLine();
+        proc.BeginOutputReadLine();
+
+        await proc.WaitForExitAsync(ct);
+
+        Console.WriteLine("ffmpeg");
+        Console.WriteLine(string.Join('\n', Directory.GetFiles(tempPath)));
+    }
+
+    private static async Task<bool> IsAudio(string path, CancellationToken ct)
+    {
+        var info = new ProcessStartInfo
+        {
+            FileName = "ffprobe",
+            Arguments = $"-v error -select_streams v -show_entries stream=codec_type -of csv=p=0 \"{path}\"",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var p = new Process();
+        p.StartInfo = info;
+        p.Start();
+        var output = await p.StandardOutput.ReadToEndAsync(ct);
+        await p.WaitForExitAsync(ct);
+
+        return string.IsNullOrWhiteSpace(output);
     }
 }
 
