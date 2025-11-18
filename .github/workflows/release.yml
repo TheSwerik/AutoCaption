@@ -27,7 +27,6 @@ jobs:
           echo ${{ github.event_path }}
           echo ${{ github.base_ref }}
           echo ${{ github.head_ref }}
-          echo ${{ github.head_ref }}
 
       - name: Install .NET
         uses: actions/setup-dotnet@v4
