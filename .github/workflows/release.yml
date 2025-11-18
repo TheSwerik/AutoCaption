@@ -2,8 +2,6 @@ name: Release
 
 on:
   push:
-    branches-ignore:
-      - '!main'
     tags:
       - '**'
 
@@ -63,6 +61,7 @@ jobs:
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v2
+        if: github.ref_name == 'main'
         with:
           make_latest: true
           body: "Unzip the fitting zip and run AutoCaption.exe"
