@@ -57,6 +57,12 @@ jobs:
         with:
           name: Windows App Zip
           path: Artifacts
+      - name: test
+        run: |
+          echo ${{ github.ref_name }}
+          echo ${{ github.ref }}
+          echo ${{ github.event_name }}
+          echo ${{ github.event_path }}
 
       - name: Create Release
         id: create_release
@@ -70,4 +76,4 @@ jobs:
           files: |
             Artifacts/**
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
