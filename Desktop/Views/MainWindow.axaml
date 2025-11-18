@@ -33,30 +33,31 @@
                    VerticalAlignment="Stretch"
                    LastChildFill="True">
 
-            <StackPanel HorizontalAlignment="Stretch"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
+            <DockPanel HorizontalAlignment="Stretch"
+                       HorizontalSpacing="5"
+                       LastChildFill="False"
+                       DockPanel.Dock="Top">
 
-                <Button HorizontalAlignment="Left"
+                <Button DockPanel.Dock="Left"
                         Width="100"
                         HorizontalContentAlignment="Center"
                         IsEnabled="{Binding !IsInProgress}"
                         Command="{Binding OpenSettingsWindowCommand}">
                     Menu
                 </Button>
-                <Button HorizontalAlignment="Right"
-                        Width="100"
-                        HorizontalContentAlignment="Center"
-                        Command="{Binding ClearCompletedCommand}">
-                    Clear Completed
-                </Button>
-                <Button HorizontalAlignment="Right"
+                <Button DockPanel.Dock="Right"
                         Width="100"
                         HorizontalContentAlignment="Center"
                         Command="{Binding ClearAllCommand}">
                     Clear All
                 </Button>
-            </StackPanel>
+                <Button DockPanel.Dock="Right"
+                        Width="150"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding ClearCompletedCommand}">
+                    Clear Completed
+                </Button>
+            </DockPanel>
 
 
             <StackPanel HorizontalAlignment="Right"

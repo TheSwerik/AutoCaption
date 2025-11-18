@@ -89,7 +89,7 @@ public static partial class WhisperService
         }
         finally
         {
-            Directory.Delete(tempPath, true);
+            // Directory.Delete(tempPath, true);
         }
     }
 
@@ -252,6 +252,7 @@ public static partial class WhisperService
             _ => throw new UnreachableException()
         };
 
+        var firstHeader = true;
         var skip = false;
         var lines = new List<string>();
         var i = 0;
@@ -265,18 +266,28 @@ public static partial class WhisperService
                     continue;
                 }
 
-                if (line == "WEBVTT")
+                // skip headers
+                if (line is "WEBVTT" or "start\tend\ttext")
                 {
-                    skip = true;
-                    continue;
+                    if (firstHeader)
+                    {
+                        firstHeader = false;
+                    }
+                    else
+                    {
+                        if (line is "WEBVTT") skip = true;
+                        continue;
+                    }
                 }
 
+                // add text lines
                 if (!timeStampRegex.IsMatch(line))
                 {
                     lines.Add(line);
                     continue;
                 }
 
+                // add timestamped lines
                 if (format == OutputFormat.TSV)
                 {
                     var parts = line.Split("\t");
@@ -308,7 +319,7 @@ public static partial class WhisperService
     [GeneratedRegex(@"(\d\d:)+(\d\d.\d+) --> (\d\d:)+(\d\d.\d+)")]
     private static partial Regex VttTimestampRegex();
 
-    [GeneratedRegex(@"(\d\d:)+(\d\d.\d+)	(\d\d:)+(\d\d.\d+)")]
+    [GeneratedRegex(@"\d+\t\d+\t.*")]
     private static partial Regex TsvTimestampRegex();
 }
 
