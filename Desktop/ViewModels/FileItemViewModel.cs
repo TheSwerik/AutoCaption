@@ -13,7 +13,6 @@ namespace Desktop.ViewModels;
 public partial class FileItemViewModel : ViewModelBase
 {
     [ObservableProperty] private bool _doSplitting;
-
     [ObservableProperty] private bool _isCompleted;
     [ObservableProperty] private bool _isInProgress;
     [ObservableProperty] private string _language;

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -16,12 +18,16 @@ namespace Desktop.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
+    private static readonly string SessionPath =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AutoCaption",
+            "session.json");
+
+    private static readonly JsonSerializerOptions JsonOption = new()
+        { WriteIndented = true, IgnoreReadOnlyFields = true, IgnoreReadOnlyProperties = true };
+
     private CancellationTokenSource _cancellationTokenSource = new();
     [ObservableProperty] private ObservableCollection<ViewModelBase> _fileItems = [new AddViewModel()];
-
-    [ObservableProperty] private ObservableCollection<FileItemViewModel>
-        _files = []; //TODO save files as session, especially when YouTube scraping becomes a part of this
-
+    [ObservableProperty] private ObservableCollection<FileItemViewModel> _files = [];
     [ObservableProperty] private string _filesString = "";
     [ObservableProperty] private bool _isInProgress;
 
@@ -29,7 +35,9 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (Design.IsDesignMode) return;
 
+        LoadSession();
 
+        Console.WriteLine(Files.Count);
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, AddInputFilesMessage>(this,
             static async void (vm, _) =>
             {
@@ -58,6 +66,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 var response = await dialog.ShowDialog<bool?>(mainWindow);
                 App.Windows.Remove(dialog);
                 Console.WriteLine("RESPONSE: " + response);
+                vm.SaveSession();
             });
 
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, CancelMessage>(this,
@@ -123,6 +132,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         foreach (var file in newFiles) Files.Add(file);
 
         RegenerateFileViews();
+        SaveSession();
     }
 
     private void RemoveFile(string path)
@@ -131,6 +141,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (file is null) return;
         Files.Remove(file);
         RegenerateFileViews();
+        SaveSession();
     }
 
     private void RegenerateFileViews()
@@ -139,5 +150,23 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         FileItems = new ObservableCollection<ViewModelBase>(itemsWithAdd);
 
         FilesString = string.Join('\n', Files);
+    }
+
+    private void LoadSession()
+    {
+        if (!File.Exists(SessionPath)) return;
+
+        var json = File.ReadAllText(SessionPath);
+        var result = JsonSerializer.Deserialize<List<FileItemViewModel>>(json, JsonOption);
+        if (result is null) return;
+
+        Files = new ObservableCollection<FileItemViewModel>(result);
+        RegenerateFileViews();
+    }
+
+    private void SaveSession()
+    {
+        var json = JsonSerializer.Serialize(Files.ToList(), JsonOption);
+        File.WriteAllText(SessionPath, json);
     }
 }
