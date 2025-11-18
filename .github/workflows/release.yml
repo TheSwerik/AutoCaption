@@ -53,8 +53,8 @@ jobs:
           & "$env:Output_Folder/tools/python/python.exe" -m pip install openai-whisper
 
       - name: Zip up the App
-        #        run: 7z a -v1900m "Artifacts/$env:Assembly_Name.Windows.zip" "./$env:Output_Folder/*"
-        run: 7z a "Artifacts/$env:Assembly_Name.Windows.7z" "./$env:Output_Folder/*"
+        run: 7z a -v1900m "Artifacts/$env:Assembly_Name.Windows.zip" "./$env:Output_Folder/*"
+      #        run: 7z a "Artifacts/$env:Assembly_Name.Windows.7z" "./$env:Output_Folder/*"
 
       - name: Upload Zip
         uses: actions/upload-artifact@v4
