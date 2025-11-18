@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -15,6 +17,7 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        InstallWhisper(false);
         InstallFFmpeg(false);
         ConfigService.Init(args);
         BuildAvaloniaApp()
@@ -32,6 +35,7 @@ internal sealed class Program
 
     private static void InstallFFmpeg(bool update)
     {
+        //TODO move to Github Actions
         const string downloadUrl =
             "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
         const string ffmpegFolder = "./tools/ffmpeg";
@@ -54,5 +58,61 @@ internal sealed class Program
         // Directory.Delete(tempDir,true);
 
         Console.WriteLine("ffmpeg insalled");
+    }
+
+    private static void InstallWhisper(bool update)
+    {
+        //TODO move to Github Actions
+        List<string> arguments = ["whisper", "-h"];
+
+        var info = new ProcessStartInfo
+        {
+            FileName = ConfigService.Config.PythonLocation,
+            Arguments = $"-m {string.Join(' ', arguments)}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        info.Environment["PATH"] = $"{info.Environment["PATH"]};./tools/ffmpeg/bin";
+        info.Environment["PYTHONUTF8"] = "1";
+
+        using var process = new Process();
+        process.StartInfo = info;
+
+        process.OutputDataReceived += (_, args) => Console.WriteLine(args.Data);
+        process.ErrorDataReceived += (_, args) => Console.WriteLine("ERRROROR: " + args.Data);
+        process.Start();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
+        process.WaitForExit();
+
+        if (process.ExitCode == 0) return;
+
+        Console.WriteLine("installing whisper");
+
+        arguments = ["pip", "install", "--upgrade", "openai-whisper"];
+
+        info = new ProcessStartInfo
+        {
+            FileName = ConfigService.Config.PythonLocation,
+            Arguments = $"-m {string.Join(' ', arguments)}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        info.Environment["PATH"] = $"{info.Environment["PATH"]};./tools/ffmpeg/bin";
+        info.Environment["PYTHONUTF8"] = "1";
+
+        using var process2 = new Process();
+        process2.StartInfo = info;
+
+        process2.OutputDataReceived += (_, args) => Console.WriteLine(args.Data);
+        process2.ErrorDataReceived += (_, args) => Console.WriteLine("ERRROROR: " + args.Data);
+        process2.Start();
+        process2.BeginOutputReadLine();
+        process2.BeginErrorReadLine();
+        process2.WaitForExit();
     }
 }
