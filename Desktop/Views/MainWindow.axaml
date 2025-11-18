@@ -33,6 +33,19 @@
                    VerticalAlignment="Stretch"
                    LastChildFill="True">
 
+            <StackPanel HorizontalAlignment="Left"
+                        DockPanel.Dock="Top"
+                        Orientation="Horizontal">
+
+                <Button HorizontalAlignment="Left"
+                        Width="100"
+                        HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding !IsInProgress}"
+                        Command="{Binding OpenSettingsWindowCommand}">
+                    Menu
+                </Button>
+            </StackPanel>
+
 
             <StackPanel HorizontalAlignment="Right"
                         DockPanel.Dock="Bottom"

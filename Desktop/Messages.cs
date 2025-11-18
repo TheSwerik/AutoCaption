@@ -14,16 +14,6 @@ public class EditInputFileMessage(FileItemViewModel file)
     public FileItemViewModel File { get; } = file;
 }
 
-public class CloseFileSettingsMessage(bool result)
-{
-    public bool Result { get; } = result;
-}
-
-public class CloseConfirmationWindowMessage(bool result)
-{
-    public bool Result { get; } = result;
-}
-
 public class CancelMessage;
 
 public class StartMessage(bool waitUntilReady)

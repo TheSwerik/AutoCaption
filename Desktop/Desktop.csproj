@@ -32,12 +32,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaXaml Include="Views\AddView.axaml.cs">
-            <SubType>Designer</SubType>
-        </AvaloniaXaml>
-    </ItemGroup>
-
-    <ItemGroup>
         <None Include="$(Pkgpython)\tools\**\*"
               Link="tools\python\%(RecursiveDir)%(Filename)%(Extension)"
               CopyToOutputDirectory="PreserveNewest"

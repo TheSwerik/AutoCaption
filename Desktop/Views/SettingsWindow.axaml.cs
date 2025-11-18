@@ -2,9 +2,9 @@
 
 namespace Desktop.Views;
 
-public partial class FileItemSettingsWindow : Window
+public partial class SettingsWindow : Window
 {
-    public FileItemSettingsWindow()
+    public SettingsWindow()
     {
         InitializeComponent();
         if (Design.IsDesignMode) return;

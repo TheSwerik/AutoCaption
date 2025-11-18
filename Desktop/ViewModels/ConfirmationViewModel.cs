@@ -1,6 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
+using Desktop.Views;
 
 namespace Desktop.ViewModels;
 
@@ -20,9 +21,10 @@ public partial class ConfirmationViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void Yes()
+    private static void Yes()
     {
-        WeakReferenceMessenger.Default.Send(new CloseConfirmationWindowMessage(true));
+        var window = App.Windows.First(w => w is ConfirmationWindow);
+        window.Close(true);
     }
 
     [RelayCommand]
@@ -33,6 +35,7 @@ public partial class ConfirmationViewModel : ViewModelBase
 
     private static void Cancel()
     {
-        WeakReferenceMessenger.Default.Send(new CloseConfirmationWindowMessage(false));
+        var window = App.Windows.First(w => w is ConfirmationWindow);
+        window.Close(false);
     }
 }

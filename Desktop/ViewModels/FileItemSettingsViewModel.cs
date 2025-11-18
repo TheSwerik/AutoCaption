@@ -7,7 +7,6 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using Desktop.Views;
 
 namespace Desktop.ViewModels;
@@ -78,12 +77,15 @@ public partial class FileItemSettingsViewModel : ViewModelBase
         _original.DoSplitting = File.DoSplitting;
         _original.Language = File.Language;
         _original.OutputLocation = File.OutputLocation;
-        WeakReferenceMessenger.Default.Send(new CloseFileSettingsMessage(true));
+
+        var window = App.Windows.First(w => w is FileItemSettingsWindow);
+        window.Close(true);
     }
 
     [RelayCommand]
     private void Cancel()
     {
-        WeakReferenceMessenger.Default.Send(new CloseFileSettingsMessage(false));
+        var window = App.Windows.First(w => w is FileItemSettingsWindow);
+        window.Close(false);
     }
 }

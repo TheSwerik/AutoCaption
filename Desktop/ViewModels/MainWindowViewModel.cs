@@ -76,6 +76,19 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand]
+    private async Task OpenSettingsWindow()
+    {
+        if (IsInProgress) return;
+
+        var mainWindow = App.Windows.First(w => w is MainWindow);
+        var dialog = new SettingsWindow { DataContext = new SettingsViewModel() };
+        App.Windows.Add(dialog);
+        var response = await dialog.ShowDialog<bool?>(mainWindow);
+        App.Windows.Remove(dialog);
+        Console.WriteLine("RESPONSE: " + response);
+    }
+
+    [RelayCommand]
     private async Task Start()
     {
         if (IsInProgress) return;

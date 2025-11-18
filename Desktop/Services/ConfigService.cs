@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -25,11 +26,15 @@ public static class ConfigService
         // Default Values
         Config = new Configuration
         {
-            OutputFormat = OutputFormat.VTT,
-            Model = Model.Medium,
             PythonLocation = "./tools/python/python.exe",
             FfmpegLocation = "./tools/ffmpeg/bin",
-            UseGpu = true
+            OutputFormat = OutputFormat.VTT,
+            Model = Model.Turbo,
+            UseGpu = true,
+            ChunkSize = TimeSpan.FromMinutes(30),
+            DoSplitting = true,
+            Language = "en",
+            OutputLocation = "./"
         };
         Save();
     }
@@ -172,6 +177,7 @@ public static class ConfigService
     }
 }
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 public enum OutputFormat
 {
     VTT,
@@ -182,9 +188,13 @@ public enum OutputFormat
     ALL
 }
 
+[SuppressMessage("ReSharper", "UnusedMember.Global")]
 public enum Model
 {
+    Tiny,
+    Base,
     Small,
     Medium,
-    Large
+    Large,
+    Turbo
 }

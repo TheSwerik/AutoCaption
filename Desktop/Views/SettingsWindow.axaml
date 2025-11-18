@@ -5,16 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Desktop.Views.FileItemSettingsWindow"
-        x:DataType="vm:FileItemSettingsViewModel"
+        x:Class="Desktop.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
         Icon="/Assets/avalonia-logo.ico"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
-        Width="450" Height="300"
-        Title="File Settings">
+        Width="600" Height="450"
+        Title="Settings">
     <Design.DataContext>
-        <vm:FileItemSettingsViewModel />
+        <vm:SettingsViewModel />
     </Design.DataContext>
 
     <Panel Margin="10 30 10 10">
@@ -49,21 +49,21 @@
                 </Button>
             </StackPanel>
 
-            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,*"
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
                   ColumnDefinitions="*,*"
                   VerticalAlignment="Stretch">
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                           Text="{Binding File.Path}" />
+                           Text="{Binding Settings.OutputLocation}" />
 
                 <Label Grid.Row="1" Grid.Column="0"
                        Target="Output">
-                    OutputLocation:
+                    Default Output Location:
                 </Label>
                 <TextBox Grid.Row="1" Grid.Column="1"
                          HorizontalContentAlignment="Stretch"
                          Name="Output"
-                         Text="{Binding File.OutputLocation}">
+                         Text="{Binding Settings.OutputLocation}">
                     <Interaction.Behaviors>
                         <EventTriggerBehavior EventName="GotFocus">
                             <InvokeCommandAction Command="{Binding SelectOutputLocationCommand}" />
@@ -72,10 +72,29 @@
                 </TextBox>
 
                 <Label Grid.Row="2" Grid.Column="0"
-                       Target="Language">
-                    Language:
+                       Target="Format">
+                    Output Format:
                 </Label>
                 <ComboBox Grid.Row="2" Grid.Column="1"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch"
+                          Name="Format"
+                          ItemsSource="{Binding OutputFormats}"
+                          SelectedItem="{Binding Settings.OutputFormat}"
+                          MaxDropDownHeight="400">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding .}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Label Grid.Row="3" Grid.Column="0"
+                       Target="Language">
+                    Default Language:
+                </Label>
+                <ComboBox Grid.Row="3" Grid.Column="1"
+                          HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Stretch"
                           Name="Language"
                           ItemsSource="{Binding Languages}"
@@ -94,13 +113,55 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Label Grid.Row="3" Grid.Column="0"
+                <Label Grid.Row="4" Grid.Column="0"
                        Target="Splitting">
-                    Splitting:
+                    Do File-Splitting?
                 </Label>
-                <CheckBox Grid.Row="3" Grid.Column="1"
+                <CheckBox Grid.Row="4" Grid.Column="1"
+                          HorizontalAlignment="Center"
                           Name="Splitting"
-                          IsChecked="{Binding File.DoSplitting}" />
+                          IsChecked="{Binding DoSplitting}" />
+
+                <Label Grid.Row="5" Grid.Column="0"
+                       Target="ChunkSize"
+                       IsVisible="{Binding DoSplitting}">
+                    Chunk Duration:
+                </Label>
+                <TimePicker Grid.Row="5" Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            Name="ChunkSize"
+                            ClockIdentifier="24HourClock"
+                            SelectedTime="{Binding Settings.ChunkSize}"
+                            IsVisible="{Binding DoSplitting}"
+                            UseSeconds="True"
+                            SecondIncrement="1" />
+
+                <Label Grid.Row="6" Grid.Column="0"
+                       Target="Model">
+                    Output Format:
+                </Label>
+                <ComboBox Grid.Row="6" Grid.Column="1"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch"
+                          Name="Model"
+                          ItemsSource="{Binding Models}"
+                          SelectedItem="{Binding Settings.Model}"
+                          MaxDropDownHeight="400">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding .}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Label Grid.Row="7" Grid.Column="0"
+                       Target="UseGpu">
+                    Use GPU?
+                </Label>
+                <CheckBox Grid.Row="7" Grid.Column="1"
+                          HorizontalAlignment="Center"
+                          Name="UseGpu"
+                          IsChecked="{Binding Settings.UseGpu}" />
 
             </Grid>
         </DockPanel>
