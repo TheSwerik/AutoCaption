@@ -18,6 +18,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: test
+        run: |
+          echo ${{ github.ref_type }}
+          echo ${{ github.ref_name }}
+          echo ${{ github.ref }}
+          echo ${{ github.event_name }}
+          echo ${{ github.event_path }}
+          echo ${{ github.base_ref }}
+          echo ${{ github.head_ref }}
+          echo ${{ github.head_ref }}
+
       - name: Install .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -57,16 +68,6 @@ jobs:
         with:
           name: Windows App Zip
           path: Artifacts
-      - name: test
-        run: |
-          echo ${{ github.ref_type }}
-          echo ${{ github.ref_name }}
-          echo ${{ github.ref }}
-          echo ${{ github.event_name }}
-          echo ${{ github.event_path }}
-          echo ${{ github.base_ref }}
-          echo ${{ github.head_ref }}
-          echo ${{ github.head_ref }}
 
       - name: Create Release
         id: create_release
