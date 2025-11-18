@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-#    tags:
-#      - '**'
 
 jobs:
   release:
@@ -19,11 +17,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      #    - name: Fail if tag not on main
-      #      run: |
-      #        $tag_commit=$(git rev-list -n 1 "$GITHUB_REF")
-      #        git branch --contains "$tag_commit" | grep main
 
       - name: Install .NET
         uses: actions/setup-dotnet@v4
@@ -68,7 +61,10 @@ jobs:
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
         with:
+          make_latest: true
+          body: "Unzip the fitting zip and run AutoCaption.exe"
           draft: false
           prerelease: false
           files: |
