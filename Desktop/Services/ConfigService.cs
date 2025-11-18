@@ -191,7 +191,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = Loglevel.Info; //TODO
+        } = Loglevel.Info;
 
         public bool LogToFile
         {
@@ -201,7 +201,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = true; //TODO
+        } = true;
     }
 }
 
