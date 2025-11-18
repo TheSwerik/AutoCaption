@@ -17,6 +17,7 @@
         <vm:SettingsViewModel />
     </Design.DataContext>
 
+    <!-- //TODO some settings are not dynamically updated  -->
     <Panel Margin="10 30 10 10">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
