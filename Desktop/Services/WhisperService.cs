@@ -168,7 +168,7 @@ public static partial class WhisperService
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = "ffmpeg",
+            FileName = $"{ConfigService.Config.FfmpegLocation}/ffmpeg.exe",
             Arguments = string.Join(' ', arguments),
             RedirectStandardError = true,
             RedirectStandardOutput = true,
@@ -206,7 +206,7 @@ public static partial class WhisperService
     {
         var info = new ProcessStartInfo
         {
-            FileName = "ffprobe",
+            FileName = $"{ConfigService.Config.FfmpegLocation}/ffprobe.exe",
             Arguments = $"-v error -select_streams v -show_entries stream=codec_type -of csv=p=0 \"{path}\"",
             RedirectStandardOutput = true,
             UseShellExecute = false,

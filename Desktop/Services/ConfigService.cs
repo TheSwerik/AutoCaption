@@ -27,7 +27,8 @@ public static class ConfigService
         {
             OutputFormat = OutputFormat.VTT,
             Model = Model.Medium,
-            PythonLocation = "python3",
+            PythonLocation = "./tools/python/python.exe",
+            FfmpegLocation = "./tools/ffmpeg/bin",
             UseGpu = true
         };
         Save();
@@ -90,6 +91,16 @@ public static class ConfigService
         }
 
         public string PythonLocation
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = null!;
+
+        public string FfmpegLocation
         {
             get;
             set
