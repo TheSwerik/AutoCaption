@@ -72,11 +72,11 @@ public partial class FileItemSettingsViewModel : ViewModelBase
     {
         _original.IsInProgress = File.IsInProgress;
         _original.Progress = File.Progress;
-        _original.Path = File.Path;
+        _original.Path = File.Path.Replace('\\', '/');
         _original.IsCompleted = File.IsCompleted;
         _original.DoSplitting = File.DoSplitting;
         _original.Language = File.Language;
-        _original.OutputLocation = File.OutputLocation;
+        _original.OutputLocation = File.OutputLocation.Replace('\\', '/');
 
         var window = App.Windows.First(w => w is FileItemSettingsWindow);
         window.Close(true);

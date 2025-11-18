@@ -48,7 +48,11 @@ public static class ConfigService
 
     private static bool FromSettings()
     {
+#if DEBUG
+        const string roaming = "./";
+#else
         var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+#endif
         var settingsLocation = Path.Combine(roaming, "AutoCaption");
         var filePath = Path.Combine(settingsLocation, "config.json");
         if (Directory.Exists(settingsLocation))
@@ -75,7 +79,11 @@ public static class ConfigService
 
     private static void Save()
     {
+#if DEBUG
+        const string roaming = "./";
+#else
         var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+#endif
         var settingsLocation = Path.Combine(roaming, "AutoCaption");
         var filePath = Path.Combine(settingsLocation, "config.json");
 
@@ -100,7 +108,7 @@ public static class ConfigService
             get;
             set
             {
-                field = value;
+                field = value.Replace('\\', '/');
                 Save();
             }
         } = null!;
@@ -110,7 +118,7 @@ public static class ConfigService
             get;
             set
             {
-                field = value;
+                field = value.Replace('\\', '/');
                 Save();
             }
         } = null!;
@@ -150,7 +158,7 @@ public static class ConfigService
             get;
             set
             {
-                field = value;
+                field = value.Replace('\\', '/');
                 Save();
             }
         } = "";

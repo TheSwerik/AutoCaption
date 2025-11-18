@@ -17,9 +17,7 @@ public static partial class WhisperService
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
-        //TODO revert testing:
-        // var maxDuration = TimeSpan.FromMinutes(30);
-        var maxDuration = TimeSpan.FromMinutes(1);
+        var maxDuration = ConfigService.Config.ChunkSize;
 
         var inputFile = new MediaFile { Filename = settings.FilePath };
         using (var engine = new Engine())
@@ -62,7 +60,6 @@ public static partial class WhisperService
                 var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                 var segmentFiles = Enumerable.Range(0, segments)
                     .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
-                //TODO detect different FileTypes
                 var outputFile =
                     $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
                 await Combine(maxDuration, outputFile, segmentFiles);
@@ -97,7 +94,7 @@ public static partial class WhisperService
             CreateNoWindow = true
         };
 
-        Console.WriteLine(info.Arguments);
+        Console.WriteLine(info.FileName + " " + info.Arguments);
         using var proc = new Process();
         proc.StartInfo = info;
 

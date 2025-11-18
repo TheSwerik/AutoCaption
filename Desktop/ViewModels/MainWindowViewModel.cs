@@ -18,9 +18,12 @@ namespace Desktop.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
+#if DEBUG
+    private static readonly string SessionPath = Path.Combine("./AutoCaption", "session.json");
+#else
     private static readonly string SessionPath =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AutoCaption",
-            "session.json");
+ Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AutoCaption","session.json");
+#endif
 
     private static readonly JsonSerializerOptions JsonOption = new()
         { WriteIndented = true, IgnoreReadOnlyFields = true, IgnoreReadOnlyProperties = true };
