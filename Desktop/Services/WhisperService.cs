@@ -27,7 +27,7 @@ public static partial class WhisperService
 
         if (inputFile.Metadata.Duration < maxDuration)
         {
-            await Process(settings, inputFile.Metadata.Duration, ct);
+            await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
             return;
         }
 
@@ -47,7 +47,7 @@ public static partial class WhisperService
                     $"\"{tempPath}/\"",
                     settings.Language
                 );
-                await Process(segmentSettings, inputFile.Metadata.Duration, ct);
+                await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
             }
 
             // recombine segments
@@ -89,11 +89,12 @@ public static partial class WhisperService
         }
         finally
         {
-            // Directory.Delete(tempPath, true);
+            Directory.Delete(tempPath, true);
         }
     }
 
-    private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, CancellationToken ct)
+    private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset,
+        CancellationToken ct)
     {
         List<string> arguments =
         [
@@ -138,7 +139,7 @@ public static partial class WhisperService
 
         void ProgressHandler(object _, DataReceivedEventArgs args)
         {
-            CalculateProgress(args, totalDuration);
+            CalculateProgress(args, totalDuration, segmentOffset);
         }
     }
 
@@ -148,7 +149,7 @@ public static partial class WhisperService
         Console.WriteLine(sender + " " + e.Data);
     }
 
-    private static void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration)
+    private static void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration, TimeSpan segmentOffset)
     {
         if (args.Data is null) return;
 
@@ -159,7 +160,7 @@ public static partial class WhisperService
         if (timestampString.Count(':') == 1) timestampString = $"00:{timestampString}";
         var timestamp = TimeSpan.Parse(timestampString);
 
-        var progress = timestamp / totalDuration * 100.0;
+        var progress = (segmentOffset + timestamp) / totalDuration * 100.0;
         OnProgress?.Invoke(null, new ProgressEventArgs(progress));
     }
 

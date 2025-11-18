@@ -37,7 +37,6 @@ internal sealed class Program
 
     private static void InstallFFmpeg(bool update)
     {
-        //TODO move to Github Actions
         const string downloadUrl =
             "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
         const string ffmpegFolder = "./tools/ffmpeg";
@@ -63,7 +62,6 @@ internal sealed class Program
 
     private static void InstallWhisper(bool update)
     {
-        //TODO move to Github Actions
         List<string> arguments = ["whisper", "-h"];
 
         var info = new ProcessStartInfo
