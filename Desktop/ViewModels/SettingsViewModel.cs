@@ -27,6 +27,8 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<CultureInfo> _languages =
         new(CultureInfo.GetCultures(CultureTypes.AllCultures).OrderBy(c => c.EnglishName));
 
+    [ObservableProperty] private ObservableCollection<Loglevel> _logLevels = new(Enum.GetValues<Loglevel>());
+
     [ObservableProperty] private ObservableCollection<Model> _models = new(Enum.GetValues<Model>());
 
     [ObservableProperty]
@@ -45,7 +47,9 @@ public partial class SettingsViewModel : ViewModelBase
             UseGpu = _original.UseGpu,
             ChunkSize = _original.ChunkSize,
             Model = _original.Model,
-            OutputFormat = _original.OutputFormat
+            OutputFormat = _original.OutputFormat,
+            LogLevel = _original.LogLevel,
+            LogToFile = _original.LogToFile
         };
         _language = CultureInfo.GetCultureInfo(_settings.Language);
     }
@@ -88,6 +92,8 @@ public partial class SettingsViewModel : ViewModelBase
         _original.Model = Settings.Model;
         _original.OutputFormat = Settings.OutputFormat;
         _original.UseGpu = Settings.UseGpu;
+        _original.LogLevel = Settings.LogLevel;
+        _original.LogToFile = Settings.LogToFile;
 
         var window = App.Windows.First(w => w is SettingsWindow);
         window.Close(true);

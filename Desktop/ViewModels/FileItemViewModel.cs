@@ -12,6 +12,7 @@ namespace Desktop.ViewModels;
 
 public partial class FileItemViewModel : ViewModelBase
 {
+    private readonly ILogger _logger = new Logger<FileItemViewModel>();
     [ObservableProperty] private bool _doSplitting;
     [ObservableProperty] private bool _isCompleted;
     [ObservableProperty] private bool _isInProgress;
@@ -79,11 +80,11 @@ public partial class FileItemViewModel : ViewModelBase
         }
         catch (TaskCanceledException)
         {
-            Console.WriteLine($"Cancelled {Path}");
+            _logger.LogError($"Cancelled {Path}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message + '\n' + ex.StackTrace);
+            _logger.LogError(ex.Message + '\n' + ex.StackTrace);
         }
         finally
         {

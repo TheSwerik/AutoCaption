@@ -182,6 +182,26 @@ public static class ConfigService
                 Save();
             }
         } = TimeSpan.FromMinutes(20);
+
+        public Loglevel LogLevel
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = Loglevel.Info; //TODO
+
+        public bool LogToFile
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = true; //TODO
     }
 }
 

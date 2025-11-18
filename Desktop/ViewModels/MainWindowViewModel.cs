@@ -40,7 +40,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         LoadSession();
 
-        Console.WriteLine(Files.Count);
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, AddInputFilesMessage>(this,
             static async void (vm, _) =>
             {
@@ -68,7 +67,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 App.Windows.Add(dialog);
                 var response = await dialog.ShowDialog<bool?>(mainWindow);
                 App.Windows.Remove(dialog);
-                Console.WriteLine("RESPONSE: " + response);
                 vm.SaveSession();
             });
 
@@ -97,7 +95,6 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         App.Windows.Add(dialog);
         var response = await dialog.ShowDialog<bool?>(mainWindow);
         App.Windows.Remove(dialog);
-        Console.WriteLine("RESPONSE: " + response);
     }
 
     [RelayCommand]

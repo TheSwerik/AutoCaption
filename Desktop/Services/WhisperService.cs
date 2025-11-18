@@ -13,6 +13,9 @@ namespace Desktop.Services;
 
 public static partial class WhisperService
 {
+    private static readonly ILogger Logger = new Logger(nameof(WhisperService));
+    private static readonly ILogger WhisperLogger = new Logger("Whisper");
+    private static readonly ILogger _ffmpegLogger = new Logger("FFmpeg");
     public static event ProgressEventHandler? OnProgress;
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
@@ -70,7 +73,7 @@ public static partial class WhisperService
                 }
                 case OutputFormat.JSON:
                 case OutputFormat.TXT:
-                    Console.WriteLine($"{ConfigService.Config.OutputFormat} Recombination is not supported");
+                    Logger.LogError($"{ConfigService.Config.OutputFormat} Recombination is not supported");
                     break;
                 case OutputFormat.VTT:
                 case OutputFormat.SRT:
@@ -117,13 +120,13 @@ public static partial class WhisperService
             CreateNoWindow = true
         };
 
-        Console.WriteLine(info.FileName + " " + info.Arguments);
+        Logger.LogInformation(info.FileName + " " + info.Arguments);
         using var proc = new Process();
         proc.StartInfo = info;
 
         proc.OutputDataReceived += ProgressHandler;
-        proc.OutputDataReceived += OutputReceived;
-        proc.ErrorDataReceived += ErrorReceived;
+        proc.OutputDataReceived += WhisperInfoLogger;
+        proc.ErrorDataReceived += WhisperErrorLogger;
 
         proc.Start();
         proc.BeginOutputReadLine();
@@ -133,8 +136,8 @@ public static partial class WhisperService
         if (proc.ExitCode != 0) throw new Exception("Python Exitcode: " + proc.ExitCode);
 
         proc.OutputDataReceived -= ProgressHandler;
-        proc.OutputDataReceived -= OutputReceived;
-        proc.ErrorDataReceived -= ErrorReceived;
+        proc.OutputDataReceived -= WhisperInfoLogger;
+        proc.ErrorDataReceived -= WhisperErrorLogger;
         return;
 
         void ProgressHandler(object _, DataReceivedEventArgs args)
@@ -143,17 +146,25 @@ public static partial class WhisperService
         }
     }
 
-    private static void OutputReceived(object sender, DataReceivedEventArgs e)
+    private static void WhisperInfoLogger(object sender, DataReceivedEventArgs e)
     {
-        //TODO log properly
-        Console.WriteLine(sender + " " + e.Data);
+        WhisperLogger.LogDebug(e.Data);
+    }
+
+    private static void WhisperErrorLogger(object sender, DataReceivedEventArgs e)
+    {
+        WhisperLogger.LogError(e.Data);
+    }
+
+    private static void FfmpegInfoLogger(object sender, DataReceivedEventArgs e)
+    {
+        _ffmpegLogger.LogDebug(e.Data);
     }
 
     private static void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration, TimeSpan segmentOffset)
     {
         if (args.Data is null) return;
 
-        //TODO fix for chunked data
         var lastLine = args.Data.Split('\n').Last();
         var timestampString = lastLine.Split(']').First().Split(' ').Last();
         if (timestampString.Count(':') < 1) return;
@@ -162,11 +173,6 @@ public static partial class WhisperService
 
         var progress = (segmentOffset + timestamp) / totalDuration * 100.0;
         OnProgress?.Invoke(null, new ProgressEventArgs(progress));
-    }
-
-    private static void ErrorReceived(object sender, DataReceivedEventArgs e)
-    {
-        Console.WriteLine("ERROR: " + sender + " " + e.Data);
     }
 
     private static async Task SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
@@ -200,15 +206,8 @@ public static partial class WhisperService
         proc.StartInfo = startInfo;
         proc.EnableRaisingEvents = true;
 
-        proc.ErrorDataReceived += (_, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data)) Console.WriteLine("ERROR: " + e.Data);
-        };
-
-        proc.OutputDataReceived += (_, e) =>
-        {
-            if (!string.IsNullOrEmpty(e.Data)) Console.WriteLine("OUTPUT: " + e.Data);
-        };
+        proc.ErrorDataReceived += FfmpegInfoLogger;
+        proc.OutputDataReceived += FfmpegInfoLogger;
 
         proc.Start();
         proc.BeginErrorReadLine();
@@ -216,10 +215,10 @@ public static partial class WhisperService
 
         await proc.WaitForExitAsync(ct);
 
-        if (proc.ExitCode != 0) throw new Exception("FFmpeg Exitcode: " + proc.ExitCode);
+        proc.ErrorDataReceived -= FfmpegInfoLogger;
+        proc.OutputDataReceived -= FfmpegInfoLogger;
 
-        Console.WriteLine("ffmpeg");
-        Console.WriteLine(string.Join('\n', Directory.GetFiles(tempPath)));
+        if (proc.ExitCode != 0) throw new Exception("FFmpeg Exitcode: " + proc.ExitCode);
     }
 
     private static async Task<bool> IsAudio(string path, CancellationToken ct)
@@ -314,7 +313,6 @@ public static partial class WhisperService
         }
 
         await File.WriteAllLinesAsync(output.Replace("\"", ""), lines);
-        Console.WriteLine(output);
     }
 
     [GeneratedRegex(@"(\d\d:)+(\d\d.\d+) --> (\d\d:)+(\d\d.\d+)")]

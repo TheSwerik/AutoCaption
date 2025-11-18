@@ -11,6 +11,11 @@ namespace Desktop;
 
 internal sealed class Program
 {
+    private static readonly ILogger Logger = new Logger<Program>();
+    private static readonly ILogger WhisperLogger = new Logger("Whisper");
+
+    private static readonly ILogger PipLogger = new Logger("Pip");
+
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
     // yet and stuff might break.
@@ -35,6 +40,7 @@ internal sealed class Program
             .LogToTrace();
     }
 
+#if DEBUG
     private static void InstallFFmpeg(bool update)
     {
         const string downloadUrl =
@@ -43,11 +49,11 @@ internal sealed class Program
         const string ffmpegPath = $"{ffmpegFolder}/bin/ffmpeg.exe";
         if (!update && File.Exists(ffmpegPath))
         {
-            Console.WriteLine("ffmpeg found");
+            Logger.LogInformation("ffmpeg found");
             return;
         }
 
-        Console.WriteLine("installing ffmpeg");
+        Logger.LogInformation("installing ffmpeg");
 
         using var client = new HttpClient();
         using var response = client.GetStreamAsync(downloadUrl).Result;
@@ -57,7 +63,7 @@ internal sealed class Program
         if (Directory.Exists(ffmpegFolder)) Directory.Delete(ffmpegFolder, true);
         Directory.Move(tempDir, ffmpegFolder);
 
-        Console.WriteLine("ffmpeg installed");
+        Logger.LogInformation("ffmpeg installed");
     }
 
     private static void InstallWhisper(bool update)
@@ -79,16 +85,18 @@ internal sealed class Program
         using var process = new Process();
         process.StartInfo = info;
 
-        process.OutputDataReceived += (_, args) => Console.WriteLine(args.Data);
-        process.ErrorDataReceived += (_, args) => Console.WriteLine("ERRROROR: " + args.Data);
+        process.OutputDataReceived += LogWhisperOutput;
+        process.ErrorDataReceived += LogWhisperError;
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         process.WaitForExit();
+        process.OutputDataReceived -= LogWhisperOutput;
+        process.ErrorDataReceived -= LogWhisperError;
 
         if (process.ExitCode == 0) return;
 
-        Console.WriteLine("installing whisper");
+        Logger.LogInformation("installing whisper");
 
         arguments = ["pip", "install", "--upgrade", "openai-whisper"];
 
@@ -107,12 +115,14 @@ internal sealed class Program
         using var process2 = new Process();
         process2.StartInfo = info;
 
-        process2.OutputDataReceived += (_, args) => Console.WriteLine(args.Data);
-        process2.ErrorDataReceived += (_, args) => Console.WriteLine("ERRROROR: " + args.Data);
+        process2.OutputDataReceived += LogPipOutput;
+        process2.ErrorDataReceived += LogPipError;
         process2.Start();
         process2.BeginOutputReadLine();
         process2.BeginErrorReadLine();
         process2.WaitForExit();
+        process2.OutputDataReceived -= LogPipOutput;
+        process2.ErrorDataReceived -= LogPipError;
 
         arguments =
         [
@@ -135,11 +145,34 @@ internal sealed class Program
         using var process3 = new Process();
         process3.StartInfo = info;
 
-        process3.OutputDataReceived += (_, args) => Console.WriteLine(args.Data);
-        process3.ErrorDataReceived += (_, args) => Console.WriteLine("ERRROROR: " + args.Data);
+        process2.OutputDataReceived += LogPipOutput;
+        process2.ErrorDataReceived += LogPipError;
         process3.Start();
         process3.BeginOutputReadLine();
         process3.BeginErrorReadLine();
         process3.WaitForExit();
+        process2.OutputDataReceived -= LogPipOutput;
+        process2.ErrorDataReceived -= LogPipError;
     }
+
+    private static void LogWhisperOutput(object? sender, DataReceivedEventArgs args)
+    {
+        WhisperLogger.LogDebug(args.Data);
+    }
+
+    private static void LogWhisperError(object? sender, DataReceivedEventArgs args)
+    {
+        WhisperLogger.LogError(args.Data);
+    }
+
+    private static void LogPipOutput(object? sender, DataReceivedEventArgs args)
+    {
+        PipLogger.LogDebug(args.Data);
+    }
+
+    private static void LogPipError(object? sender, DataReceivedEventArgs args)
+    {
+        PipLogger.LogError(args.Data);
+    }
+#endif
 }

@@ -12,7 +12,7 @@ namespace Desktop;
 
 public class App : Application
 {
-    public static List<Window> Windows = [];
+    public static readonly List<Window> Windows = [];
 
     public override void Initialize()
     {

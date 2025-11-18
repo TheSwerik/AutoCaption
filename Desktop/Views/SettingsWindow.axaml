@@ -11,7 +11,7 @@
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
-        Width="600" Height="450"
+        Width="600" Height="600"
         Title="Settings">
     <Design.DataContext>
         <vm:SettingsViewModel />
@@ -49,7 +49,7 @@
                 </Button>
             </StackPanel>
 
-            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
                   ColumnDefinitions="*,*"
                   VerticalAlignment="Stretch">
 
@@ -162,6 +162,33 @@
                           HorizontalAlignment="Center"
                           Name="UseGpu"
                           IsChecked="{Binding Settings.UseGpu}" />
+
+                <Label Grid.Row="8" Grid.Column="0"
+                       Target="LogLevel">
+                    Log Level:
+                </Label>
+                <ComboBox Grid.Row="8" Grid.Column="1"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch"
+                          Name="LogLevel"
+                          ItemsSource="{Binding LogLevels}"
+                          SelectedItem="{Binding Settings.LogLevel}"
+                          MaxDropDownHeight="400">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding .}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Label Grid.Row="9" Grid.Column="0"
+                       Target="LogToFile">
+                    Log to file?
+                </Label>
+                <CheckBox Grid.Row="9" Grid.Column="1"
+                          HorizontalAlignment="Center"
+                          Name="LogToFile"
+                          IsChecked="{Binding Settings.LogToFile}" />
 
             </Grid>
         </DockPanel>

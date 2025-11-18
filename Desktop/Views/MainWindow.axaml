@@ -43,7 +43,7 @@
                         HorizontalContentAlignment="Center"
                         IsEnabled="{Binding !IsInProgress}"
                         Command="{Binding OpenSettingsWindowCommand}">
-                    Menu
+                    Settings
                 </Button>
                 <Button DockPanel.Dock="Right"
                         Width="100"
