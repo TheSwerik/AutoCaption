@@ -51,18 +51,40 @@ public static partial class WhisperService
             }
 
             // recombine segments
-            if (ConfigService.Config.OutputFormat == OutputFormat.ALL)
+            switch (ConfigService.Config.OutputFormat)
             {
-                //TODO yikes
-            }
-            else
-            {
-                var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
-                var segmentFiles = Enumerable.Range(0, segments)
-                    .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
-                var outputFile =
-                    $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
-                await Combine(maxDuration, outputFile, segmentFiles);
+                case OutputFormat.ALL:
+                {
+                    OutputFormat[] extensions = [OutputFormat.SRT, OutputFormat.VTT, OutputFormat.TSV];
+                    foreach (var extension in extensions)
+                    {
+                        var captionExtension = extension.ToString().ToLowerInvariant();
+                        var segmentFiles = Enumerable.Range(0, segments)
+                            .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
+                        var outputFile =
+                            $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                        await Combine(maxDuration, outputFile, extension, segmentFiles);
+                    }
+
+                    break;
+                }
+                case OutputFormat.JSON:
+                case OutputFormat.TXT:
+                    Console.WriteLine($"{ConfigService.Config.OutputFormat} Recombination is not supported");
+                    break;
+                case OutputFormat.VTT:
+                case OutputFormat.SRT:
+                case OutputFormat.TSV:
+                default:
+                {
+                    var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
+                    var segmentFiles = Enumerable.Range(0, segments)
+                        .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
+                    var outputFile =
+                        $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                    await Combine(maxDuration, outputFile, ConfigService.Config.OutputFormat, segmentFiles);
+                    break;
+                }
             }
         }
         finally
@@ -219,16 +241,14 @@ public static partial class WhisperService
         return string.IsNullOrWhiteSpace(output);
     }
 
-    private static async Task Combine(TimeSpan segemntDuration, string output, params IEnumerable<string> input)
+    private static async Task Combine(TimeSpan segmentDuration, string output, OutputFormat format,
+        params IEnumerable<string> input)
     {
-        var timeStampRegex = ConfigService.Config.OutputFormat switch
+        var timeStampRegex = format switch
         {
-            OutputFormat.VTT => TimestampRegex(),
-            OutputFormat.JSON => TimestampRegex(), //TODO
-            OutputFormat.TXT => TimestampRegex(), //TODO
-            OutputFormat.SRT => TimestampRegex(), //TODO
-            OutputFormat.TSV => TimestampRegex(), //TODO
-            OutputFormat.ALL => throw new UnreachableException(),
+            OutputFormat.VTT or OutputFormat.SRT => VttTimestampRegex(),
+            OutputFormat.TSV => TsvTimestampRegex(),
+            OutputFormat.JSON or OutputFormat.ALL => throw new UnreachableException(),
             _ => throw new UnreachableException()
         };
 
@@ -257,13 +277,25 @@ public static partial class WhisperService
                     continue;
                 }
 
-                //TODO for other fileTypes
-                var timestamps = line.Split(" --> ")
-                    .Select(t => t.Count(c => c == ':') > 1 ? t : $"00:{t}")
-                    .Select(TimeSpan.Parse)
-                    .Select(t => t + i * segemntDuration)
-                    .Select(t => t.ToString("G"));
-                lines.Add(string.Join(" --> ", timestamps));
+                if (format == OutputFormat.TSV)
+                {
+                    var parts = line.Split("\t");
+                    var start = long.Parse(parts[0]);
+                    start += i * (long)segmentDuration.TotalSeconds * 1000;
+                    var end = long.Parse(parts[1]);
+                    end += i * (long)segmentDuration.TotalSeconds * 1000;
+
+                    lines.Add($"{start}\t{end}\t{parts[2]}");
+                }
+                else
+                {
+                    var timestamps = line.Split(" --> ")
+                        .Select(t => t.Count(c => c == ':') > 1 ? t : $"00:{t}")
+                        .Select(TimeSpan.Parse)
+                        .Select(t => t + i * segmentDuration)
+                        .Select(t => t.ToString("G"));
+                    lines.Add(string.Join(" --> ", timestamps));
+                }
             }
 
             i++;
@@ -274,7 +306,10 @@ public static partial class WhisperService
     }
 
     [GeneratedRegex(@"(\d\d:)+(\d\d.\d+) --> (\d\d:)+(\d\d.\d+)")]
-    private static partial Regex TimestampRegex();
+    private static partial Regex VttTimestampRegex();
+
+    [GeneratedRegex(@"(\d\d:)+(\d\d.\d+)	(\d\d:)+(\d\d.\d+)")]
+    private static partial Regex TsvTimestampRegex();
 }
 
 public record WhisperSettings(string FilePath, string OutputLocation, string Language);

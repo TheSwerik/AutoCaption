@@ -63,8 +63,8 @@ public partial class SettingsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SelectOutputLocation()
     {
-        var mainWindow = App.Windows.First(w => w is FileItemSettingsWindow);
-        var topLevel = TopLevel.GetTopLevel(mainWindow) ?? throw new UnreachableException();
+        var window = App.Windows.First(w => w is SettingsWindow);
+        var topLevel = TopLevel.GetTopLevel(window) ?? throw new UnreachableException();
         var output = await topLevel.StorageProvider.OpenFolderPickerAsync(OutputOptions);
 
         if (output.Count != 1) throw new UnreachableException();
