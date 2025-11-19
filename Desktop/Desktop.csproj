@@ -24,6 +24,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
+        <PackageReference Include="Google.Apis.YouTube.v3" Version="1.70.0.3847"/>
         <PackageReference Include="MediaToolkit" Version="1.1.0.1"/>
         <PackageReference Include="python" Version="3.12.*"/>
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0"/>
@@ -35,6 +36,13 @@
         <None Include="$(Pkgpython)\tools\**\*"
               Link="tools\python\%(RecursiveDir)%(Filename)%(Extension)"
               CopyToOutputDirectory="PreserveNewest"
+              CopyToPublishDirectory="Always"
+        />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="client_secret.json"
+              CopyToOutputDirectory="Always"
               CopyToPublishDirectory="Always"
         />
     </ItemGroup>

@@ -26,7 +26,7 @@ internal sealed class Program
         InstallWhisper(false);
         InstallFFmpeg(false);
 #endif
-        ConfigService.Init(args);
+        var hasCaptions = YoutubeService.GetAllVideosWithoutCustomCaptions().Result;
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
