@@ -61,6 +61,13 @@ jobs:
           New-Item -ItemType Directory -Force -Path $target | Out-Null
           tar -xf yt-dlp.zip --directory $target
 
+      - name: Export YouTube Client Secret
+        run: |
+          $target = "$env:Output_Folder/client_secret.json"
+          echo "$YOUTUBE_CLIENT_SECRET" > "$target"
+        env:
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+
       - name: Zip up the App
         run: 7z a "Artifacts/$env:Assembly_Name.Windows.7z" "./$env:Output_Folder/*"
 
