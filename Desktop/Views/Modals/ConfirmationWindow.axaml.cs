@@ -1,10 +1,10 @@
 ﻿using Avalonia.Controls;
 
-namespace Desktop.Views;
+namespace Desktop.Views.Modals;
 
-public partial class SettingsWindow : Window
+public partial class ConfirmationWindow : Window
 {
-    public SettingsWindow()
+    public ConfirmationWindow()
     {
         InitializeComponent();
         if (Design.IsDesignMode) return;

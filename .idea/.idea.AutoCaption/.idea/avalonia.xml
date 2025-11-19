@@ -7,6 +7,7 @@
         <entry key="Desktop/Views/FileItemSettingsWindow.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/FileItemView.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/MainWindow.axaml" value="Desktop/Desktop.csproj" />
+        <entry key="Desktop/Views/Modals/SettingsWindow.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/SettingsWindow.axaml" value="Desktop/Desktop.csproj" />
       </map>
     </option>

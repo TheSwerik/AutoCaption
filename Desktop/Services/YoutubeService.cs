@@ -93,7 +93,7 @@ public static class YoutubeService
         proc.OutputDataReceived -= YtdlpInfoLogger;
         proc.OutputDataReceived -= FilePathParser;
 
-        if (proc.ExitCode != 0) throw new Exception("YT-DLP Exitcode: " + proc.ExitCode);
+        if (proc.ExitCode != 0) throw new Exception("YT-DLP Exitcode: " + proc.ExitCode); //TODO show errors in frontend
 
         return fileName;
 

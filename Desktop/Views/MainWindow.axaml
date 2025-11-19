@@ -57,6 +57,12 @@
                         Command="{Binding ClearCompletedCommand}">
                     Clear Completed
                 </Button>
+                <Button DockPanel.Dock="Right"
+                        Width="150"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding OpenImportFromYoutubeCommand}">
+                    Import from YouTube
+                </Button>
             </DockPanel>
 
 

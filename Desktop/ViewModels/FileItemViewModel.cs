@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Desktop.Services;
 using Desktop.Views;
+using Desktop.Views.Modals;
 
 namespace Desktop.ViewModels;
 

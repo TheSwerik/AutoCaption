@@ -9,7 +9,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Desktop.Services;
-using Desktop.Views;
+using Desktop.Views.Modals;
 
 namespace Desktop.ViewModels;
 
@@ -31,8 +31,7 @@ public partial class SettingsViewModel : ViewModelBase
 
     [ObservableProperty] private ObservableCollection<Model> _models = new(Enum.GetValues<Model>());
 
-    [ObservableProperty]
-    private ObservableCollection<OutputFormat> _outputFormats = new(Enum.GetValues<OutputFormat>());
+    [ObservableProperty] private ObservableCollection<OutputFormat> _outputFormats = new(Enum.GetValues<OutputFormat>());
 
     [ObservableProperty] private ConfigService.Configuration _settings;
 

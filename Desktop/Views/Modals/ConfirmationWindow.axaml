@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:Desktop.ViewModels"
         mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
-        x:Class="Desktop.Views.ConfirmationWindow"
+        x:Class="Desktop.Views.Modals.ConfirmationWindow"
         x:DataType="viewModels:ConfirmationViewModel"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
         WindowStartupLocation="CenterScreen"

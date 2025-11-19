@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Desktop.Views;
+using Desktop.Views.Modals;
 
 namespace Desktop.ViewModels;
 
@@ -90,6 +91,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     {
         if (IsInProgress) return;
 
+        var mainWindow = App.Windows.First(w => w is MainWindow);
+        var dialog = new SettingsWindow { DataContext = new SettingsViewModel() };
+        App.Windows.Add(dialog);
+        var response = await dialog.ShowDialog<bool?>(mainWindow);
+        App.Windows.Remove(dialog);
+    }
+
+    [RelayCommand]
+    private async Task OpenImportFromYoutube()
+    {
         var mainWindow = App.Windows.First(w => w is MainWindow);
         var dialog = new SettingsWindow { DataContext = new SettingsViewModel() };
         App.Windows.Add(dialog);

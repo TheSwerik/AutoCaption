@@ -47,4 +47,25 @@
         />
     </ItemGroup>
 
+    <ItemGroup>
+        <Compile Update="Views\Modals\ConfirmationWindow.axaml.cs">
+            <DependentUpon>ConfirmationWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Modals\FileItemSettingsWindow.axaml.cs">
+            <DependentUpon>FileItemSettingsWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Modals\SettingsWindow.axaml.cs">
+            <DependentUpon>SettingsWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="Views\Modals\ConfirmationWindow.axaml"/>
+        <AdditionalFiles Include="Views\Modals\FileItemSettingsWindow.axaml"/>
+        <AdditionalFiles Include="Views\Modals\SettingsWindow.axaml"/>
+    </ItemGroup>
+
 </Project>

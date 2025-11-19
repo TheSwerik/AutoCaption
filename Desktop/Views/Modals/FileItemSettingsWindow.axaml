@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Desktop.Views.FileItemSettingsWindow"
+        x:Class="Desktop.Views.Modals.FileItemSettingsWindow"
         x:DataType="vm:FileItemSettingsViewModel"
         Icon="/Assets/avalonia-logo.ico"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
