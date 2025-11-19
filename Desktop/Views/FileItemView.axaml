@@ -64,7 +64,13 @@
                 </ProgressBar>
 
                 <TextBlock TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                           Text="{Binding Path}" />
+                           Text="{Binding Path}">
+                    <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="Tapped">
+                            <InvokeCommandAction Command="{Binding RevealCommand}" />
+                        </EventTriggerBehavior>
+                    </Interaction.Behaviors>
+                </TextBlock>
             </DockPanel>
         </Panel>
 

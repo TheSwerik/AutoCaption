@@ -32,8 +32,9 @@ internal sealed class Program
         // {
         // YoutubeService.DownloadAudio(file.Path.Split(':')[1], "./").Wait();
         // }
-        YoutubeService.DownloadAudio("IYy6hU98qU0", "./").Wait();
-        YoutubeService.DownloadAudio("s-De28NNBl4", "./").Wait();
+        // var path =  YoutubeService.DownloadAudioAsync("IYy6hU98qU0", "E:/YouTube/temp").Result;
+        // WhisperService.Process(new WhisperSettings(path.Replace('\\','/'),"E:/YouTube","en"), CancellationToken.None).Wait();
+        // YoutubeService.DownloadAudioAsync("s-De28NNBl4", "./").Wait();
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }

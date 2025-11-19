@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,5 +97,29 @@ public partial class FileItemViewModel : ViewModelBase
     private void OnProgress(object _, ProgressEventArgs args)
     {
         Progress = args.Value;
+    }
+
+    [RelayCommand]
+    private void Reveal()
+    {
+        if (YoutubeService.IsYoutubePath(Path))
+        {
+            System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = YoutubeService.GetYouTubeUrl(Path),
+                UseShellExecute = true
+            });
+        }
+        else
+        {
+            // System.Diagnostics.Process.Start(new ProcessStartInfo
+            // {
+            //     FileName = "explorer.exe",
+            //     Arguments = $"/select,`\"{Path}\"`",
+            //     UseShellExecute = true
+            // });
+            Console.WriteLine($"explorer.exe /select,`\"{Path}\"`");
+            FileRevealer.Reveal(Path);
+        }
     }
 }

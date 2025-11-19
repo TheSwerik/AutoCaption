@@ -6,6 +6,7 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -41,7 +42,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="client_secret.json"
+        <None Include="client_secret*.json"
               CopyToOutputDirectory="Always"
               CopyToPublishDirectory="Always"
         />

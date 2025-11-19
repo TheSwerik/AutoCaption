@@ -16,6 +16,9 @@ namespace Desktop.Services;
 
 public static class YoutubeService
 {
+    private const string ytKey = "YouTube";
+    private static readonly ILogger YtdlpLogger = new Logger("yt-dlp");
+
     private static YouTubeService YouTubeService
     {
         get
@@ -24,6 +27,17 @@ public static class YoutubeService
             return field!;
         }
         set;
+    }
+
+    public static bool IsYoutubePath(string path)
+    {
+        var split = path.Split(':');
+        return split.Length >= 2 && split.First().Equals(ytKey);
+    }
+
+    public static string? GetYouTubeUrl(string path)
+    {
+        return !IsYoutubePath(path) ? null : path[(ytKey.Length + 1)..];
     }
 
     public static async Task<IEnumerable<FileItemViewModel>> GetAllVideosWithoutCustomCaptions(bool privateVideos = false)
@@ -36,7 +50,7 @@ public static class YoutubeService
         });
     }
 
-    public static async Task DownloadAudio(string id, string outputPath, CancellationToken ct = default)
+    public static async Task<string> DownloadAudioAsync(string id, string outputPath, CancellationToken ct = default)
     {
         Directory.CreateDirectory(outputPath);
 
@@ -63,8 +77,11 @@ public static class YoutubeService
         proc.StartInfo = startInfo;
         proc.EnableRaisingEvents = true;
 
-        proc.ErrorDataReceived += (s, a) => Console.WriteLine(a.Data);
-        proc.OutputDataReceived += (s, a) => Console.WriteLine("ERROR: " + a.Data);
+        var fileName = "";
+
+        proc.ErrorDataReceived += YtdlpErrorLogger;
+        proc.OutputDataReceived += YtdlpInfoLogger;
+        proc.OutputDataReceived += FilePathParser;
 
         proc.Start();
         proc.BeginErrorReadLine();
@@ -72,10 +89,30 @@ public static class YoutubeService
 
         await proc.WaitForExitAsync(ct);
 
-        // proc.ErrorDataReceived -= FfmpegInfoLogger;
-        // proc.OutputDataReceived -= FfmpegInfoLogger;
+        proc.ErrorDataReceived -= YtdlpErrorLogger;
+        proc.OutputDataReceived -= YtdlpInfoLogger;
+        proc.OutputDataReceived -= FilePathParser;
 
         if (proc.ExitCode != 0) throw new Exception("YT-DLP Exitcode: " + proc.ExitCode);
+
+        return fileName;
+
+        void FilePathParser(object _, DataReceivedEventArgs args)
+        {
+            Console.WriteLine("EWRROR: " + args.Data);
+            const string extractionString = "[ExtractAudio] Destination: ";
+            if (args.Data is not null && args.Data.StartsWith(extractionString)) fileName = args.Data[extractionString.Length..];
+        }
+    }
+
+    private static void YtdlpInfoLogger(object sender, DataReceivedEventArgs e)
+    {
+        YtdlpLogger.LogDebug(e.Data);
+    }
+
+    private static void YtdlpErrorLogger(object sender, DataReceivedEventArgs e)
+    {
+        YtdlpLogger.LogError(e.Data);
     }
 
     private static async Task<IEnumerable<string>> GetAllVideoIdsAsync(bool privateVideos)
@@ -122,7 +159,7 @@ public static class YoutubeService
                 YouTubeService.Scope.YoutubeUpload // upload captions
             ];
             var clientSecret = await GoogleClientSecrets.FromStreamAsync(stream, ct);
-            const string userId = "YourUserID"; //TODO what does it do?
+            const string userId = "AutoCaptionUser";
             credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(clientSecret.Secrets, scopes, userId, ct);
         }
 
