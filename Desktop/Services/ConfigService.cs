@@ -35,7 +35,8 @@ public static class ConfigService
             ChunkSize = TimeSpan.FromMinutes(30),
             DoSplitting = true,
             Language = "en",
-            OutputLocation = "./"
+            OutputLocation = "./",
+            YouTubeCaptionName = ""
         };
         Save();
     }
@@ -213,6 +214,16 @@ public static class ConfigService
                 Save();
             }
         } = true;
+
+        public string YouTubeCaptionName
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = "";
     }
 }
 

@@ -17,6 +17,7 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
+    <!-- TODO scrolling-->
     <Panel Margin="10 30 10 10">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>

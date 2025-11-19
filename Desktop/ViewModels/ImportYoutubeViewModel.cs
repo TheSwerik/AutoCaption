@@ -12,12 +12,12 @@ public partial class ImportYoutubeViewModel : ViewModelBase
 {
     [ObservableProperty] private YouTubeVisibility[] _allVisibilities = Enum.GetValues<YouTubeVisibility>();
     [ObservableProperty] private int _skip;
-    [ObservableProperty] private ObservableCollection<YouTubeVisibility> _visibilities = new([]);
+    [ObservableProperty] private ObservableCollection<YouTubeVisibility> _visibilities = new([YouTubeVisibility.Public]);
 
     [RelayCommand]
     private void Yes()
     {
-        var window = App.Windows.First(w => w is ConfirmationWindow);
+        var window = App.Windows.First(w => w is ImportYoutubeWindow);
         window.Close(new Result(Visibilities.ToArray(), Skip));
     }
 
@@ -29,7 +29,7 @@ public partial class ImportYoutubeViewModel : ViewModelBase
 
     private static void Cancel()
     {
-        var window = App.Windows.First(w => w is ConfirmationWindow);
+        var window = App.Windows.First(w => w is ImportYoutubeWindow);
         window.Close();
     }
 

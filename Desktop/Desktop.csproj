@@ -43,9 +43,9 @@
 
     <ItemGroup>
         <None Include="client_secret*.json"
-              CopyToOutputDirectory="Always"
+              CopyToOutputDirectory="PreserveNewest"
               CopyToPublishDirectory="Always"
-        />
+              Link="client_secret.json"/>
     </ItemGroup>
 
     <ItemGroup>

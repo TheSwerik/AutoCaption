@@ -7,3 +7,4 @@ riderModule.iml
 examples
 AutoCaption
 **/client_secret*.json
+session.json

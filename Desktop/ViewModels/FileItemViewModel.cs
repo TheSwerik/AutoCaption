@@ -107,7 +107,7 @@ public partial class FileItemViewModel : ViewModelBase
         {
             System.Diagnostics.Process.Start(new ProcessStartInfo
             {
-                FileName = YoutubeService.GetYouTubeVideoUrl(Path),
+                FileName = YoutubeService.GetYouTubeVideoUrl(YoutubeService.GetYouTubeVideoId(Path)!),
                 UseShellExecute = true
             });
         }
