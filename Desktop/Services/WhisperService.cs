@@ -310,7 +310,7 @@ public static partial class WhisperService
                         .Select(t => t.Count(c => c == ':') > 1 ? t : $"00:{t}")
                         .Select(TimeSpan.Parse)
                         .Select(t => t + i * segmentDuration)
-                        .Select(t => t.ToString("G"));
+                        .Select(t => $"{t.Hours:00}:{t.Minutes:00}:{t.Seconds:00}.{t.Milliseconds:000}"); // 01:19:26.100
                     lines.Add(string.Join(" --> ", timestamps));
                 }
             }
