@@ -112,14 +112,12 @@ public partial class FileItemViewModel : ViewModelBase
         }
         else
         {
-            // System.Diagnostics.Process.Start(new ProcessStartInfo
-            // {
-            //     FileName = "explorer.exe",
-            //     Arguments = $"/select,`\"{Path}\"`",
-            //     UseShellExecute = true
-            // });
-            Console.WriteLine($"explorer.exe /select,`\"{Path}\"`");
-            FileRevealer.Reveal(Path);
+            System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{Path}\"",
+                UseShellExecute = true
+            });
         }
     }
 }
