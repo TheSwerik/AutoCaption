@@ -20,6 +20,14 @@ public static partial class WhisperService
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
+        var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
+
+        if (YoutubeService.IsYoutubePath(settings.FilePath))
+        {
+            var path = await YoutubeService.DownloadAudioAsync(settings.FilePath, tempPath, ct);
+            settings = settings with { FilePath = path };
+        }
+
         var maxDuration = ConfigService.Config.ChunkSize;
 
         var inputFile = new MediaFile { Filename = settings.FilePath };
@@ -34,7 +42,6 @@ public static partial class WhisperService
             return;
         }
 
-        var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
         try
         {
             // split file into 30min segments
