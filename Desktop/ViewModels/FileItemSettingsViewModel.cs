@@ -56,9 +56,16 @@ public partial class FileItemSettingsViewModel : ViewModelBase
         var topLevel = TopLevel.GetTopLevel(mainWindow) ?? throw new UnreachableException();
         var output = await topLevel.StorageProvider.OpenFolderPickerAsync(OutputOptions);
 
-        if (output.Count != 1) throw new UnreachableException();
-
-        File.OutputLocation = output[0].Path.LocalPath;
+        switch (output.Count)
+        {
+            case 0:
+                return;
+            case 1:
+                File.OutputLocation = output[0].Path.LocalPath;
+                break;
+            default:
+                throw new UnreachableException();
+        }
     }
 
     [RelayCommand]
