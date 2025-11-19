@@ -50,19 +50,15 @@
                 </Button>
             </StackPanel>
 
-            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
                   ColumnDefinitions="*,*"
                   VerticalAlignment="Stretch">
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
-                    Settings
-                </TextBlock>
-
-                <Label Grid.Row="1" Grid.Column="0"
+                <Label Grid.Row="0" Grid.Column="0"
                        Target="Output">
                     Default Output Location:
                 </Label>
-                <TextBox Grid.Row="1" Grid.Column="1"
+                <TextBox Grid.Row="0" Grid.Column="1"
                          HorizontalContentAlignment="Stretch"
                          Name="Output"
                          Text="{Binding Settings.OutputLocation}">
@@ -73,11 +69,11 @@
                     </Interaction.Behaviors>
                 </TextBox>
 
-                <Label Grid.Row="2" Grid.Column="0"
+                <Label Grid.Row="1" Grid.Column="0"
                        Target="Format">
                     Output Format:
                 </Label>
-                <ComboBox Grid.Row="2" Grid.Column="1"
+                <ComboBox Grid.Row="1" Grid.Column="1"
                           HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Stretch"
                           Name="Format"
@@ -91,11 +87,11 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Label Grid.Row="3" Grid.Column="0"
+                <Label Grid.Row="2" Grid.Column="0"
                        Target="Language">
                     Default Language:
                 </Label>
-                <ComboBox Grid.Row="3" Grid.Column="1"
+                <ComboBox Grid.Row="2" Grid.Column="1"
                           HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Stretch"
                           Name="Language"
@@ -115,21 +111,21 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Label Grid.Row="4" Grid.Column="0"
+                <Label Grid.Row="3" Grid.Column="0"
                        Target="Splitting">
                     Do File-Splitting?
                 </Label>
-                <CheckBox Grid.Row="4" Grid.Column="1"
+                <CheckBox Grid.Row="3" Grid.Column="1"
                           HorizontalAlignment="Center"
                           Name="Splitting"
                           IsChecked="{Binding DoSplitting}" />
 
-                <Label Grid.Row="5" Grid.Column="0"
+                <Label Grid.Row="4" Grid.Column="0"
                        Target="ChunkSize"
                        IsVisible="{Binding DoSplitting}">
-                    Chunk Duration:
+                    Segment Duration:
                 </Label>
-                <TimePicker Grid.Row="5" Grid.Column="1"
+                <TimePicker Grid.Row="4" Grid.Column="1"
                             HorizontalAlignment="Stretch"
                             Name="ChunkSize"
                             ClockIdentifier="24HourClock"
@@ -138,11 +134,11 @@
                             UseSeconds="True"
                             SecondIncrement="1" />
 
-                <Label Grid.Row="6" Grid.Column="0"
+                <Label Grid.Row="5" Grid.Column="0"
                        Target="Model">
-                    Output Format:
+                    Model:
                 </Label>
-                <ComboBox Grid.Row="6" Grid.Column="1"
+                <ComboBox Grid.Row="5" Grid.Column="1"
                           HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Stretch"
                           Name="Model"
@@ -156,20 +152,20 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Label Grid.Row="7" Grid.Column="0"
+                <Label Grid.Row="6" Grid.Column="0"
                        Target="UseGpu">
                     Use GPU?
                 </Label>
-                <CheckBox Grid.Row="7" Grid.Column="1"
+                <CheckBox Grid.Row="6" Grid.Column="1"
                           HorizontalAlignment="Center"
                           Name="UseGpu"
                           IsChecked="{Binding Settings.UseGpu}" />
 
-                <Label Grid.Row="8" Grid.Column="0"
+                <Label Grid.Row="7" Grid.Column="0"
                        Target="LogLevel">
                     Log Level:
                 </Label>
-                <ComboBox Grid.Row="8" Grid.Column="1"
+                <ComboBox Grid.Row="7" Grid.Column="1"
                           HorizontalAlignment="Stretch"
                           HorizontalContentAlignment="Stretch"
                           Name="LogLevel"
@@ -183,20 +179,20 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
 
-                <Label Grid.Row="9" Grid.Column="0"
+                <Label Grid.Row="8" Grid.Column="0"
                        Target="LogToFile">
                     Log to file?
                 </Label>
-                <CheckBox Grid.Row="9" Grid.Column="1"
+                <CheckBox Grid.Row="8" Grid.Column="1"
                           HorizontalAlignment="Center"
                           Name="LogToFile"
                           IsChecked="{Binding Settings.LogToFile}" />
 
-                <Label Grid.Row="10" Grid.Column="0"
+                <Label Grid.Row="9" Grid.Column="0"
                        Target="YouTubeCaptionName">
                     YouTube Caption name (leave blank for nothing):
                 </Label>
-                <TextBox Grid.Row="10" Grid.Column="1"
+                <TextBox Grid.Row="9" Grid.Column="1"
                          HorizontalContentAlignment="Stretch"
                          Name="YouTubeCaptionName"
                          Text="{Binding Settings.YouTubeCaptionName}" />
