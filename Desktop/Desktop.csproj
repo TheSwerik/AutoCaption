@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Folder Include="Exceptions\"/>
         <Folder Include="Models\"/>
         <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
@@ -58,6 +59,10 @@
         </Compile>
         <Compile Update="Views\Modals\SettingsWindow.axaml.cs">
             <DependentUpon>SettingsWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Modals\ImportYoutubeWindow.axaml.cs">
+            <DependentUpon>ImportYoutubeWindow.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
     </ItemGroup>

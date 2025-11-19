@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Desktop.Services;
 using Desktop.Views;
 using Desktop.Views.Modals;
 
@@ -102,10 +103,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     private async Task OpenImportFromYoutube()
     {
         var mainWindow = App.Windows.First(w => w is MainWindow);
-        var dialog = new SettingsWindow { DataContext = new SettingsViewModel() };
+        var dialog = new ImportYoutubeWindow { DataContext = new ImportYoutubeViewModel() };
         App.Windows.Add(dialog);
-        var response = await dialog.ShowDialog<bool?>(mainWindow);
+        var response = await dialog.ShowDialog<ImportYoutubeViewModel.Result?>(mainWindow);
         App.Windows.Remove(dialog);
+
+        if (response is null) return;
+
+        var videoFiles = await YoutubeService.GetAllVideosWithoutCustomCaptions(response.Visibilities, response.Skip);
+        foreach (var file in videoFiles) Files.Add(file);
+        RegenerateFileViews();
+        SaveSession();
     }
 
     [RelayCommand]

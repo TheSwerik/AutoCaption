@@ -58,7 +58,7 @@
                     Clear Completed
                 </Button>
                 <Button DockPanel.Dock="Right"
-                        Width="150"
+                        Width="200"
                         HorizontalContentAlignment="Center"
                         Command="{Binding OpenImportFromYoutubeCommand}">
                     Import from YouTube

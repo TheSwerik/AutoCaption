@@ -21,8 +21,10 @@ public static partial class WhisperService
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
         var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
+        var isYoutube = YoutubeService.IsYoutubePath(settings.FilePath);
+        var youtubeVideoId = YoutubeService.GetYouTubeVideoId(settings.FilePath);
 
-        if (YoutubeService.IsYoutubePath(settings.FilePath))
+        if (isYoutube)
         {
             var path = await YoutubeService.DownloadAudioAsync(settings.FilePath, tempPath, ct);
             settings = settings with { FilePath = path };
@@ -39,6 +41,11 @@ public static partial class WhisperService
         if (inputFile.Metadata.Duration < maxDuration)
         {
             await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
+            if (!isYoutube) return;
+
+            var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
+            var vttOutputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+            await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
             return;
         }
 
@@ -90,11 +97,18 @@ public static partial class WhisperService
                     var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                     var segmentFiles = Enumerable.Range(0, segments)
                         .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
-                    var outputFile =
-                        $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                    var outputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
                     await Combine(maxDuration, outputFile, ConfigService.Config.OutputFormat, segmentFiles);
                     break;
                 }
+            }
+
+            if (isYoutube)
+            {
+                var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
+                if (ConfigService.Config.OutputFormat == OutputFormat.ALL) captionExtension = "vtt";
+                var vttOutputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
             }
         }
         finally

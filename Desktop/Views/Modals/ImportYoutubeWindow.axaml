@@ -1,0 +1,74 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:Desktop.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
+        x:Class="Desktop.Views.Modals.ImportYoutubeWindow"
+        x:DataType="viewModels:ImportYoutubeViewModel"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        WindowStartupLocation="CenterScreen"
+        HorizontalAlignment="Stretch"
+        MinWidth="150" MaxWidth="450"
+        MinHeight="150" MaxHeight="450"
+        Width="450" Height="200"
+        Title="YouTube Import">
+    <Design.DataContext>
+        <viewModels:ImportYoutubeViewModel />
+    </Design.DataContext>
+
+    <DockPanel LastChildFill="True" Margin="10 30 10 10">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Spacing="5">
+            <Button Command="{Binding YesCommand}">Yes</Button>
+            <Button Command="{Binding NoCommand}">No</Button>
+        </StackPanel>
+
+        <StackPanel>
+
+            <TextBlock TextWrapping="Wrap">
+                Are you sure you want to import all your videos from YouTube?
+                This will log you into your YouTube account, ask for read and write access on your YouTube channel, grab all of your videos and select them based on:
+                1. Does the video have Automatically generated captions or captions at all in the following languages?
+                a. English
+                b. the video's audio language (ignore if English)
+                2. The Visibility filter.
+                3. The Skip filter.
+                Based on these filters, ALL of your uploaded videos will be scraped and added to the Session.
+                This operation is read only until you click on "Start" (and they start processing)
+
+                This operation has a daily quota limit. If you hit the limit, remember the number you were on and put it in the Skip filter the following day.
+
+                Do you want to proceed?
+            </TextBlock>
+            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
+
+                <Label Grid.Row="0" Grid.Column="0"
+                       Target="Visibility">
+                    Visibility:
+                </Label>
+                <ComboBox Grid.Row="0" Grid.Column="1"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch"
+                          Name="Visibility"
+                          ItemsSource="{Binding AllVisibilities}"
+                          SelectedItem="{Binding Visibilities}"
+                          MaxDropDownHeight="400">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding .}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Label Grid.Row="1" Grid.Column="0"
+                       Target="Skip">
+                    Skip:
+                </Label>
+                <NumericUpDown Grid.Row="1" Grid.Column="1"
+                               Name="Skip"
+                               Minimum="0"
+                               Value="{Binding Skip}" />
+            </Grid>
+        </StackPanel>
+    </DockPanel>
+</Window>
