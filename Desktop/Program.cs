@@ -25,8 +25,15 @@ internal sealed class Program
 #if DEBUG
         InstallWhisper(false);
         InstallFFmpeg(false);
+        InstallYtDlp(false);
 #endif
-        var hasCaptions = YoutubeService.GetAllVideosWithoutCustomCaptions().Result;
+        // var files = YoutubeService.GetAllVideosWithoutCustomCaptions().Result;
+        // foreach (var file in files)
+        // {
+        // YoutubeService.DownloadAudio(file.Path.Split(':')[1], "./").Wait();
+        // }
+        YoutubeService.DownloadAudio("IYy6hU98qU0", "./").Wait();
+        YoutubeService.DownloadAudio("s-De28NNBl4", "./").Wait();
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
@@ -64,6 +71,26 @@ internal sealed class Program
         Directory.Move(tempDir, ffmpegFolder);
 
         Logger.LogInformation("ffmpeg installed");
+    }
+
+    private static void InstallYtDlp(bool update)
+    {
+        const string downloadUrl = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_win.zip";
+        const string ytdlpFolder = "./tools/yt-dlp";
+        const string ytdlpPath = $"{ytdlpFolder}/yt-dlp.exe";
+        if (!update && File.Exists(ytdlpPath))
+        {
+            Logger.LogInformation("yt-dlp found");
+            return;
+        }
+
+        Logger.LogInformation("installing yt-dlp");
+
+        using var client = new HttpClient();
+        using var response = client.GetStreamAsync(downloadUrl).Result;
+        ZipFile.ExtractToDirectory(response, ytdlpFolder);
+
+        Logger.LogInformation("yt-dlp installed");
     }
 
     private static void InstallWhisper(bool update)

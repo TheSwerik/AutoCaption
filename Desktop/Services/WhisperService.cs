@@ -15,7 +15,7 @@ public static partial class WhisperService
 {
     private static readonly ILogger Logger = new Logger(nameof(WhisperService));
     private static readonly ILogger WhisperLogger = new Logger("Whisper");
-    private static readonly ILogger _ffmpegLogger = new Logger("FFmpeg");
+    private static readonly ILogger FfmpegLogger = new Logger("FFmpeg");
     public static event ProgressEventHandler? OnProgress;
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
@@ -158,7 +158,7 @@ public static partial class WhisperService
 
     private static void FfmpegInfoLogger(object sender, DataReceivedEventArgs e)
     {
-        _ffmpegLogger.LogDebug(e.Data);
+        FfmpegLogger.LogDebug(e.Data);
     }
 
     private static void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration, TimeSpan segmentOffset)

@@ -28,6 +28,7 @@ public static class ConfigService
         {
             PythonLocation = "./tools/python/python.exe",
             FfmpegLocation = "./tools/ffmpeg/bin",
+            YtdlpLocation = "./tools/yt-dlp",
             OutputFormat = OutputFormat.VTT,
             Model = Model.Turbo,
             UseGpu = true,
@@ -114,6 +115,16 @@ public static class ConfigService
         } = null!;
 
         public string FfmpegLocation
+        {
+            get;
+            set
+            {
+                field = value.Replace('\\', '/');
+                Save();
+            }
+        } = null!;
+
+        public string YtdlpLocation
         {
             get;
             set

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -34,9 +36,46 @@ public static class YoutubeService
         });
     }
 
-    public static async Task DownloadAudio(string id)
+    public static async Task DownloadAudio(string id, string outputPath, CancellationToken ct = default)
     {
-        //TODO download with yt-dlp
+        Directory.CreateDirectory(outputPath);
+
+        string[] arguments =
+        [
+            "-x",
+            $"--ffmpeg-location \"{ConfigService.Config.FfmpegLocation}\"",
+            "-f bestaudio",
+            $"-o \"{outputPath}/%(title)s.%(ext)s\"",
+            $"https://youtu.be/{id}"
+        ];
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = $"{ConfigService.Config.YtdlpLocation}/yt-dlp.exe",
+            Arguments = string.Join(' ', arguments),
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var proc = new Process();
+        proc.StartInfo = startInfo;
+        proc.EnableRaisingEvents = true;
+
+        proc.ErrorDataReceived += (s, a) => Console.WriteLine(a.Data);
+        proc.OutputDataReceived += (s, a) => Console.WriteLine("ERROR: " + a.Data);
+
+        proc.Start();
+        proc.BeginErrorReadLine();
+        proc.BeginOutputReadLine();
+
+        await proc.WaitForExitAsync(ct);
+
+        // proc.ErrorDataReceived -= FfmpegInfoLogger;
+        // proc.OutputDataReceived -= FfmpegInfoLogger;
+
+        if (proc.ExitCode != 0) throw new Exception("YT-DLP Exitcode: " + proc.ExitCode);
     }
 
     private static async Task<IEnumerable<string>> GetAllVideoIdsAsync(bool privateVideos)
