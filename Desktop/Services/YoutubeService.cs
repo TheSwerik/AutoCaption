@@ -18,7 +18,8 @@ namespace Desktop.Services;
 
 public static class YoutubeService
 {
-    private const string ytKey = "YouTube";
+    private const string YtKey = "YouTube";
+    private static readonly ILogger Logger = new Logger(nameof(YoutubeService));
     private static readonly ILogger YtdlpLogger = new Logger("yt-dlp");
 
     private static YouTubeService YouTubeService
@@ -34,12 +35,12 @@ public static class YoutubeService
     public static bool IsYoutubePath(string path)
     {
         var split = path.Split(':');
-        return split.Length >= 2 && split.First().Equals(ytKey);
+        return split.Length >= 2 && split.First().Equals(YtKey);
     }
 
     public static string? GetYouTubeVideoId(string path)
     {
-        return !IsYoutubePath(path) ? null : path[(ytKey.Length + 1)..];
+        return !IsYoutubePath(path) ? null : path[(YtKey.Length + 1)..];
     }
 
     public static string GetYouTubeVideoUrl(string videoId)
@@ -59,6 +60,7 @@ public static class YoutubeService
 
     public static async Task<string> DownloadAudioAsync(string id, string outputPath, CancellationToken ct = default)
     {
+        Logger.LogInformation($"Downloading Audio of video {id} to {outputPath}");
         Directory.CreateDirectory(outputPath);
 
         string[] arguments =
@@ -102,13 +104,18 @@ public static class YoutubeService
 
         if (proc.ExitCode != 0) throw new Exception("YT-DLP Exitcode: " + proc.ExitCode); //TODO show errors in frontend
 
+        Logger.LogInformation($"Downloaded Audio of video {id} to {outputPath}: {fileName}");
         return fileName;
 
         void FilePathParser(object _, DataReceivedEventArgs args)
         {
             Console.WriteLine("EWRROR: " + args.Data);
             const string extractionString = "[ExtractAudio] Destination: ";
-            if (args.Data is not null && args.Data.StartsWith(extractionString)) fileName = args.Data[extractionString.Length..];
+            if (args.Data is not null && args.Data.StartsWith(extractionString))
+            {
+                fileName = args.Data[extractionString.Length..];
+                Logger.LogDebug($"Found Destination-Information: {fileName}");
+            }
         }
     }
 
@@ -131,14 +138,20 @@ public static class YoutubeService
     /// <returns></returns>
     private static async Task<IEnumerable<string>> GetAllVideoIdsAsync(YouTubeVisibility[] visibilities)
     {
+        Logger.LogInformation($"Finding all uploads of current channel with visibilities: {string.Join(',', visibilities)}");
         const int pageSize = 50; // this is the maximum
         var visibilityStrings = visibilities.Select(v => v.ToString().ToLowerInvariant()).ToImmutableArray();
 
         // get "uploads" Playlist
+        Logger.LogInformation("Finding own YouTube Channel including Uploads Playlist (1qu)");
         var request = YouTubeService.Channels.List("contentDetails"); // 1 quota unit
         request.Mine = true;
         var response = await request.ExecuteAsync();
+        Logger.LogInformation($"Found {response.Items.Count} Channels. Picking the first one: {response.Items[0].Id}");
+
         var uploadsPlaylistId = response.Items[0].ContentDetails.RelatedPlaylists.Uploads;
+        if (uploadsPlaylistId is null) throw new Exception("Upload Playlist not found"); //TODO
+        Logger.LogInformation($"Found Upload-Playlist: {uploadsPlaylistId}");
 
         // get VideoIDs from Playlist
         var videoIds = new List<string>();
@@ -149,24 +162,30 @@ public static class YoutubeService
             // Pages quota units total
             var req = YouTubeService.PlaylistItems.List("contentDetails,status");
             req.PlaylistId = uploadsPlaylistId;
-            req.MaxResults = 50;
+            req.MaxResults = pageSize;
             req.PageToken = nextToken;
 
+            Logger.LogInformation($"Listing uploaded Videos of Page {nextToken} (1qu)");
             var resp = await req.ExecuteAsync();
 
+            Logger.LogInformation($"Found {resp.Items.Count} Videos of Page {nextToken}");
             var ids = resp.Items
                 .Where(i => visibilityStrings.Any(v => string.Equals(i.Status?.PrivacyStatus, v)))
-                .Select(item => item.ContentDetails.VideoId);
+                .Select(item => item.ContentDetails.VideoId)
+                .ToImmutableArray();
 
+            Logger.LogInformation($"Found {ids.Length} Videos fit the visibility check");
             videoIds.AddRange(ids);
             nextToken = resp.NextPageToken;
         } while (nextToken != null);
 
+        Logger.LogInformation($"Found {videoIds.Count} Videos in total");
         return videoIds;
     }
 
     private static async Task InitYouTubeServiceAsync(CancellationToken ct = default)
     {
+        Logger.LogInformation("Initializing YouTube Service");
         UserCredential credential;
 
         await using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
@@ -186,6 +205,7 @@ public static class YoutubeService
             HttpClientInitializer = credential,
             ApplicationName = "AutoCaption"
         });
+        Logger.LogInformation("YouTube Service Initialized");
     }
 
     /// <summary>
@@ -197,6 +217,7 @@ public static class YoutubeService
     {
         const string autoGeneratedCaptionKind = "asr";
 
+        Logger.LogInformation($"Finding Auto-Generated Captions (50qu): {videoId}");
         // 50 quota units each, ouch
         var request = YouTubeService.Captions.List("snippet", videoId);
         var response = await request.ExecuteAsync();
@@ -204,7 +225,10 @@ public static class YoutubeService
         //TODO check audio languages
         //TODO check english always
 
-        return response.Items.Where(c => c.Snippet.TrackKind.Equals(autoGeneratedCaptionKind));
+        var autoGeneratedCaptions = response.Items.Where(c => c.Snippet.TrackKind.Equals(autoGeneratedCaptionKind)).ToImmutableArray();
+        Logger.LogInformation(
+            $"Found {autoGeneratedCaptions.Length} Auto-Generated Captions (50qu) of {videoId}: {string.Join(',', autoGeneratedCaptions.Select(c => $"{c.Snippet.Language}"))}");
+        return autoGeneratedCaptions;
     }
 
     /// <summary>
@@ -217,7 +241,7 @@ public static class YoutubeService
     /// <returns></returns>
     public static async Task UploadCaptionAsync(string videoId, string language, string path, CancellationToken ct = default)
     {
-        //TODO logging
+        Logger.LogInformation($"Uploading caption (400qu): {videoId},  language: {language}, path: {path}");
         var caption = new Caption
         {
             Snippet = new CaptionSnippet
@@ -232,6 +256,7 @@ public static class YoutubeService
         await using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
         var insert = YouTubeService.Captions.Insert(caption, "snippet", fs, "application/octet-stream");
         await insert.UploadAsync(ct);
+        Logger.LogInformation($"Successfully uploaded Caption (400qu): {videoId},  language: {language}, path: {path}");
     }
 }
 

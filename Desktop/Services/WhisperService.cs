@@ -20,13 +20,16 @@ public static partial class WhisperService
 
     public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
+        Logger.LogInformation($"Beginning processing of {settings}.");
         var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
         var isYoutube = YoutubeService.IsYoutubePath(settings.FilePath);
         var youtubeVideoId = YoutubeService.GetYouTubeVideoId(settings.FilePath);
 
         if (isYoutube)
         {
+            Logger.LogInformation($"Since {settings.FilePath} is a YouTube link, downloading audio file");
             var path = await YoutubeService.DownloadAudioAsync(settings.FilePath, tempPath, ct);
+            Logger.LogInformation($"Audio downloaded successfully to {path}");
             settings = settings with { FilePath = path };
         }
 
@@ -40,32 +43,44 @@ public static partial class WhisperService
 
         if (inputFile.Metadata.Duration < maxDuration)
         {
+            Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
+            Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
             await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
+            Logger.LogInformation($"Processing of {settings.FilePath} completed.");
             if (!isYoutube) return;
 
             var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
             var vttOutputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+            Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
             await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
+            Logger.LogInformation("Caption Uploaded");
             return;
         }
 
         try
         {
             // split file into 30min segments
+            Logger.LogInformation($"Splitting {settings.FilePath} to temp path {tempPath} into {maxDuration} segments");
             await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
+            Logger.LogInformation("Splitting completed");
             var ext = Path.GetExtension(settings.FilePath);
 
             // process each segment
+            Logger.LogInformation("Processing each Segment...");
             var segments = (int)Math.Ceiling(inputFile.Metadata.Duration / maxDuration);
             for (var i = 0; i < segments; i++)
             {
+                Logger.LogInformation($"Processing Segment {i}...");
                 var segmentSettings = new WhisperSettings(
                     $"\"{tempPath}/segment-{i}{ext}\"",
                     $"\"{tempPath}/\"",
                     settings.Language
                 );
                 await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
+                Logger.LogInformation($"Processing of Segment {i} completed.");
             }
+
+            Logger.LogInformation("Processing of every Segment completed.");
 
             // recombine segments
             switch (ConfigService.Config.OutputFormat)
@@ -75,12 +90,14 @@ public static partial class WhisperService
                     OutputFormat[] extensions = [OutputFormat.SRT, OutputFormat.VTT, OutputFormat.TSV];
                     foreach (var extension in extensions)
                     {
+                        Logger.LogInformation($"Combining {extension} segments");
                         var captionExtension = extension.ToString().ToLowerInvariant();
                         var segmentFiles = Enumerable.Range(0, segments)
                             .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
                         var outputFile =
                             $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
                         await Combine(maxDuration, outputFile, extension, segmentFiles);
+                        Logger.LogInformation($"{extension} segments combined: {outputFile}");
                     }
 
                     break;
@@ -94,11 +111,13 @@ public static partial class WhisperService
                 case OutputFormat.TSV:
                 default:
                 {
+                    Logger.LogInformation($"Combining {ConfigService.Config.OutputFormat} segments");
                     var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                     var segmentFiles = Enumerable.Range(0, segments)
                         .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
                     var outputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
                     await Combine(maxDuration, outputFile, ConfigService.Config.OutputFormat, segmentFiles);
+                    Logger.LogInformation($"{ConfigService.Config.OutputFormat} segments combined: {outputFile}");
                     break;
                 }
             }
@@ -108,7 +127,9 @@ public static partial class WhisperService
                 var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                 if (ConfigService.Config.OutputFormat == OutputFormat.ALL) captionExtension = "vtt";
                 var vttOutputFile = $"{settings.OutputLocation}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
                 await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
+                Logger.LogInformation("Caption Uploaded");
             }
         }
         finally
@@ -262,8 +283,7 @@ public static partial class WhisperService
         return string.IsNullOrWhiteSpace(output);
     }
 
-    private static async Task Combine(TimeSpan segmentDuration, string output, OutputFormat format,
-        params IEnumerable<string> input)
+    private static async Task Combine(TimeSpan segmentDuration, string output, OutputFormat format, params IEnumerable<string> input)
     {
         var timeStampRegex = format switch
         {
