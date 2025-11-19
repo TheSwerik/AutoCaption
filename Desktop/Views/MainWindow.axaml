@@ -7,7 +7,7 @@
         x:Class="Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
         Width="1280" Height="720"
@@ -18,7 +18,7 @@
     </Design.DataContext>
 
     <!-- TODO scrolling-->
-    <Panel Margin="10 30 10 10">
+    <Panel Margin="10">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial

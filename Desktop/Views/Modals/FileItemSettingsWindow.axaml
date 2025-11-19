@@ -8,7 +8,7 @@
         x:Class="Desktop.Views.Modals.FileItemSettingsWindow"
         x:DataType="vm:FileItemSettingsViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
         Width="450" Height="300"
@@ -17,7 +17,7 @@
         <vm:FileItemSettingsViewModel />
     </Design.DataContext>
 
-    <Panel Margin="10 30 10 10">
+    <Panel Margin="10 ">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial

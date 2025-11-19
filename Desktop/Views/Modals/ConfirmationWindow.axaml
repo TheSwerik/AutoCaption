@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
         x:Class="Desktop.Views.Modals.ConfirmationWindow"
         x:DataType="viewModels:ConfirmationViewModel"
-        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
         MinWidth="150" MaxWidth="450"
@@ -17,7 +17,7 @@
         <viewModels:ConfirmationViewModel />
     </Design.DataContext>
 
-    <DockPanel LastChildFill="True" Margin="10 30 10 10">
+    <DockPanel LastChildFill="True" Margin="10">
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Spacing="5">
             <Button Command="{Binding YesCommand}">Yes</Button>
             <Button Command="{Binding NoCommand}">No</Button>

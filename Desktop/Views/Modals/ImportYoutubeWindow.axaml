@@ -6,18 +6,18 @@
         mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
         x:Class="Desktop.Views.Modals.ImportYoutubeWindow"
         x:DataType="viewModels:ImportYoutubeViewModel"
-        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
-        MinWidth="150" MaxWidth="450"
-        MinHeight="150" MaxHeight="450"
-        Width="450" Height="200"
+        MinWidth="400" MaxWidth="600"
+        MinHeight="500" MaxHeight="900"
+        Width="600" Height="700"
         Title="YouTube Import">
     <Design.DataContext>
         <viewModels:ImportYoutubeViewModel />
     </Design.DataContext>
 
-    <DockPanel LastChildFill="True" Margin="10 30 10 10">
+    <DockPanel LastChildFill="True" Margin="10">
         <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Spacing="5">
             <Button Command="{Binding YesCommand}">Yes</Button>
             <Button Command="{Binding NoCommand}">No</Button>
@@ -26,19 +26,31 @@
         <StackPanel>
 
             <TextBlock TextWrapping="Wrap">
-                Are you sure you want to import all your videos from YouTube?
-                This will log you into your YouTube account, ask for read and write access on your YouTube channel, grab all of your videos and select them based on:
-                1. Does the video have Automatically generated captions or captions at all in the following languages?
-                a. English
-                b. the video's audio language (ignore if English)
-                2. The Visibility filter.
-                3. The Skip filter.
-                Based on these filters, ALL of your uploaded videos will be scraped and added to the Session.
-                This operation is read only until you click on "Start" (and they start processing)
-
-                This operation has a daily quota limit. If you hit the limit, remember the number you were on and put it in the Skip filter the following day.
-
-                Do you want to proceed?
+                <Run Text="Are you sure you want to import all your videos from YouTube?" />
+                <LineBreak />
+                <Run
+                    Text="This will log you into your YouTube account, ask for read and write access on your YouTube channel, grab all of your videos and select them based on:" />
+                <LineBreak />
+                <Run Text="1. Does the video have Automatically generated captions or captions at all in the following languages?" />
+                <LineBreak />
+                <Run Text="    a. English" />
+                <LineBreak />
+                <Run Text="    b. the video's audio language (ignore if English)" />
+                <LineBreak />
+                <Run Text="2. The Visibility filter." />
+                <LineBreak />
+                <Run Text="3. The Skip filter." />
+                <LineBreak />
+                <Run Text="Based on these filters, ALL of your uploaded videos will be scraped and added to the Session." />
+                <LineBreak />
+                <Run Text="This operation is read only until you click on &quot;Start&quot; (and they start processing)" />
+                <LineBreak />
+                <LineBreak />
+                <Run
+                    Text="This operation has a daily quota limit. If you hit the limit, remember the number you were on and put it in the Skip filter the following day." />
+                <LineBreak />
+                <LineBreak />
+                <Run Text="Do you want to proceed?" />
             </TextBlock>
             <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
 
@@ -46,19 +58,19 @@
                        Target="Visibility">
                     Visibility:
                 </Label>
-                <ComboBox Grid.Row="0" Grid.Column="1"
-                          HorizontalAlignment="Stretch"
-                          HorizontalContentAlignment="Stretch"
-                          Name="Visibility"
-                          ItemsSource="{Binding AllVisibilities}"
-                          SelectedItem="{Binding Visibilities}"
-                          MaxDropDownHeight="400">
-                    <ComboBox.ItemTemplate>
+                <ListBox Grid.Row="0" Grid.Column="1"
+                         HorizontalAlignment="Stretch"
+                         Name="Visibility"
+                         ItemsSource="{Binding AllVisibilities}"
+                         SelectedItems="{Binding Visibilities}"
+                         SelectionMode="Multiple,Toggle"
+                         Height="150">
+                    <ListBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding .}" />
                         </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
                 <Label Grid.Row="1" Grid.Column="0"
                        Target="Skip">
