@@ -28,13 +28,15 @@ public static class ConfigService
         {
             PythonLocation = "./tools/python/python.exe",
             FfmpegLocation = "./tools/ffmpeg/bin",
+            YtdlpLocation = "./tools/yt-dlp",
             OutputFormat = OutputFormat.VTT,
             Model = Model.Turbo,
             UseGpu = true,
             ChunkSize = TimeSpan.FromMinutes(30),
             DoSplitting = true,
             Language = "en",
-            OutputLocation = "./"
+            OutputLocation = "./",
+            YouTubeCaptionName = ""
         };
         Save();
     }
@@ -123,6 +125,16 @@ public static class ConfigService
             }
         } = null!;
 
+        public string YtdlpLocation
+        {
+            get;
+            set
+            {
+                field = value.Replace('\\', '/');
+                Save();
+            }
+        } = null!;
+
         public bool UseGpu
         {
             get;
@@ -202,6 +214,16 @@ public static class ConfigService
                 Save();
             }
         } = true;
+
+        public string YouTubeCaptionName
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = "";
     }
 }
 

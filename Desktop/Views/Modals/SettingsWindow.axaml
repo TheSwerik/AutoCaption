@@ -5,20 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         d:DesignWidth="800" d:DesignHeight="450"
-        x:Class="Desktop.Views.SettingsWindow"
+        x:Class="Desktop.Views.Modals.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
-        Width="600" Height="600"
+        Width="750" Height="600"
         Title="Settings">
     <Design.DataContext>
         <vm:SettingsViewModel />
     </Design.DataContext>
 
     <!-- //TODO some settings are not dynamically updated  -->
-    <Panel Margin="10 30 10 10">
+    <Panel Margin="10">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial
@@ -50,12 +50,13 @@
                 </Button>
             </StackPanel>
 
-            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
                   ColumnDefinitions="*,*"
                   VerticalAlignment="Stretch">
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                           Text="{Binding Settings.OutputLocation}" />
+                <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                    Settings
+                </TextBlock>
 
                 <Label Grid.Row="1" Grid.Column="0"
                        Target="Output">
@@ -190,6 +191,15 @@
                           HorizontalAlignment="Center"
                           Name="LogToFile"
                           IsChecked="{Binding Settings.LogToFile}" />
+
+                <Label Grid.Row="10" Grid.Column="0"
+                       Target="YouTubeCaptionName">
+                    YouTube Caption name (leave blank for nothing):
+                </Label>
+                <TextBox Grid.Row="10" Grid.Column="1"
+                         HorizontalContentAlignment="Stretch"
+                         Name="YouTubeCaptionName"
+                         Text="{Binding Settings.YouTubeCaptionName}" />
 
             </Grid>
         </DockPanel>

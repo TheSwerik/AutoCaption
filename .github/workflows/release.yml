@@ -52,6 +52,15 @@ jobs:
           & "$env:Output_Folder/tools/python/python.exe" -m pip install --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
           & "$env:Output_Folder/tools/python/python.exe" -m pip install openai-whisper
 
+      - name: Install yt-dlp
+        run: curl -L -o yt-dlp.zip https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_win.zip
+
+      - name: Extract FFmpeg
+        run: |
+          $target = "$env:Output_Folder/tools/yt-dlp"
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          tar -xf yt-dlp.zip --directory $target
+
       - name: Zip up the App
         run: 7z a "Artifacts/$env:Assembly_Name.Windows.7z" "./$env:Output_Folder/*"
 

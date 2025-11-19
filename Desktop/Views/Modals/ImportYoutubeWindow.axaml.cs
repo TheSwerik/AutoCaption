@@ -1,10 +1,10 @@
 ﻿using Avalonia.Controls;
 
-namespace Desktop.Views;
+namespace Desktop.Views.Modals;
 
-public partial class SettingsWindow : Window
+public partial class ImportYoutubeWindow : Window
 {
-    public SettingsWindow()
+    public ImportYoutubeWindow()
     {
         InitializeComponent();
         if (Design.IsDesignMode) return;

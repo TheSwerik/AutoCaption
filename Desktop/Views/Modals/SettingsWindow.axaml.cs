@@ -1,10 +1,10 @@
 ﻿using Avalonia.Controls;
 
-namespace Desktop.Views;
+namespace Desktop.Views.Modals;
 
-public partial class FileItemSettingsWindow : Window
+public partial class SettingsWindow : Window
 {
-    public FileItemSettingsWindow()
+    public SettingsWindow()
     {
         InitializeComponent();
         if (Design.IsDesignMode) return;

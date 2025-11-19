@@ -7,7 +7,7 @@
         x:Class="Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        TransparencyLevelHint="AcrylicBlur" Background="Transparent" ExtendClientAreaToDecorationsHint="True"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
         Width="1280" Height="720"
@@ -17,7 +17,8 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Panel Margin="10 30 10 10">
+    <!-- TODO scrolling-->
+    <Panel Margin="10">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
                 <ExperimentalAcrylicMaterial
@@ -56,6 +57,12 @@
                         HorizontalContentAlignment="Center"
                         Command="{Binding ClearCompletedCommand}">
                     Clear Completed
+                </Button>
+                <Button DockPanel.Dock="Right"
+                        Width="200"
+                        HorizontalContentAlignment="Center"
+                        Command="{Binding OpenImportFromYoutubeCommand}">
+                    Import from YouTube
                 </Button>
             </DockPanel>
 

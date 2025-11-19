@@ -1,0 +1,86 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:Desktop.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
+        x:Class="Desktop.Views.Modals.ImportYoutubeWindow"
+        x:DataType="viewModels:ImportYoutubeViewModel"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        HorizontalAlignment="Stretch"
+        MinWidth="400" MaxWidth="600"
+        MinHeight="500" MaxHeight="900"
+        Width="600" Height="700"
+        Title="YouTube Import">
+    <Design.DataContext>
+        <viewModels:ImportYoutubeViewModel />
+    </Design.DataContext>
+
+    <DockPanel LastChildFill="True" Margin="10">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Spacing="5">
+            <Button Command="{Binding YesCommand}">Yes</Button>
+            <Button Command="{Binding NoCommand}">No</Button>
+        </StackPanel>
+
+        <StackPanel>
+
+            <TextBlock TextWrapping="Wrap">
+                <Run Text="Are you sure you want to import all your videos from YouTube?" />
+                <LineBreak />
+                <Run
+                    Text="This will log you into your YouTube account, ask for read and write access on your YouTube channel, grab all of your videos and select them based on:" />
+                <LineBreak />
+                <Run Text="1. Does the video have Automatically generated captions or captions at all in the following languages?" />
+                <LineBreak />
+                <Run Text="    a. English" />
+                <LineBreak />
+                <Run Text="    b. the video's audio language (ignore if English)" />
+                <LineBreak />
+                <Run Text="2. The Visibility filter." />
+                <LineBreak />
+                <Run Text="3. The Skip filter." />
+                <LineBreak />
+                <Run Text="Based on these filters, ALL of your uploaded videos will be scraped and added to the Session." />
+                <LineBreak />
+                <Run Text="This operation is read only until you click on &quot;Start&quot; (and they start processing)" />
+                <LineBreak />
+                <LineBreak />
+                <Run
+                    Text="This operation has a daily quota limit. If you hit the limit, remember the number you were on and put it in the Skip filter the following day." />
+                <LineBreak />
+                <LineBreak />
+                <Run Text="Do you want to proceed?" />
+            </TextBlock>
+            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
+
+                <Label Grid.Row="0" Grid.Column="0"
+                       Target="Visibility">
+                    Visibility:
+                </Label>
+                <ListBox Grid.Row="0" Grid.Column="1"
+                         HorizontalAlignment="Stretch"
+                         Name="Visibility"
+                         ItemsSource="{Binding AllVisibilities}"
+                         SelectedItems="{Binding Visibilities}"
+                         SelectionMode="Multiple,Toggle"
+                         Height="150">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding .}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Label Grid.Row="1" Grid.Column="0"
+                       Target="Skip">
+                    Skip:
+                </Label>
+                <NumericUpDown Grid.Row="1" Grid.Column="1"
+                               Name="Skip"
+                               Minimum="0"
+                               Value="{Binding Skip}" />
+            </Grid>
+        </StackPanel>
+    </DockPanel>
+</Window>

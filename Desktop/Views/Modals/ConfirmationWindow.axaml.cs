@@ -1,6 +1,6 @@
 ﻿using Avalonia.Controls;
 
-namespace Desktop.Views;
+namespace Desktop.Views.Modals;
 
 public partial class ConfirmationWindow : Window
 {

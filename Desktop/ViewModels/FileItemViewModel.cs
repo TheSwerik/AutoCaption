@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Desktop.Services;
 using Desktop.Views;
+using Desktop.Views.Modals;
 
 namespace Desktop.ViewModels;
 
@@ -96,5 +98,27 @@ public partial class FileItemViewModel : ViewModelBase
     private void OnProgress(object _, ProgressEventArgs args)
     {
         Progress = args.Value;
+    }
+
+    [RelayCommand]
+    private void Reveal()
+    {
+        if (YoutubeService.IsYoutubePath(Path))
+        {
+            System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = YoutubeService.GetYouTubeVideoUrl(YoutubeService.GetYouTubeVideoId(Path)!),
+                UseShellExecute = true
+            });
+        }
+        else
+        {
+            System.Diagnostics.Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"/select,\"{Path}\"",
+                UseShellExecute = true
+            });
+        }
     }
 }

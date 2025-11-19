@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Folder Include="Exceptions\"/>
         <Folder Include="Models\"/>
         <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
@@ -24,6 +25,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
+        <PackageReference Include="Google.Apis.YouTube.v3" Version="1.70.0.3847"/>
         <PackageReference Include="MediaToolkit" Version="1.1.0.1"/>
         <PackageReference Include="python" Version="3.12.*"/>
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.0"/>
@@ -37,6 +39,38 @@
               CopyToOutputDirectory="PreserveNewest"
               CopyToPublishDirectory="Always"
         />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="client_secret*.json"
+              CopyToOutputDirectory="PreserveNewest"
+              CopyToPublishDirectory="Always"
+              Link="client_secret.json"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Views\Modals\ConfirmationWindow.axaml.cs">
+            <DependentUpon>ConfirmationWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Modals\FileItemSettingsWindow.axaml.cs">
+            <DependentUpon>FileItemSettingsWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Modals\SettingsWindow.axaml.cs">
+            <DependentUpon>SettingsWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Modals\ImportYoutubeWindow.axaml.cs">
+            <DependentUpon>ImportYoutubeWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="Views\Modals\ConfirmationWindow.axaml"/>
+        <AdditionalFiles Include="Views\Modals\FileItemSettingsWindow.axaml"/>
+        <AdditionalFiles Include="Views\Modals\SettingsWindow.axaml"/>
     </ItemGroup>
 
 </Project>
