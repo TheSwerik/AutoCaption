@@ -27,14 +27,6 @@ internal sealed class Program
         InstallFFmpeg(false);
         InstallYtDlp(false);
 #endif
-        // var files = YoutubeService.GetAllVideosWithoutCustomCaptions().Result;
-        // foreach (var file in files)
-        // {
-        // YoutubeService.DownloadAudio(file.Path.Split(':')[1], "./").Wait();
-        // }
-        // var path =  YoutubeService.DownloadAudioAsync("IYy6hU98qU0", "E:/YouTube/temp").Result;
-        // WhisperService.Process(new WhisperSettings(path.Replace('\\','/'),"E:/YouTube","en"), CancellationToken.None).Wait();
-        // YoutubeService.DownloadAudioAsync("s-De28NNBl4", "./").Wait();
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
