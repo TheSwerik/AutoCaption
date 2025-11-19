@@ -72,7 +72,7 @@ public partial class FileItemViewModel : ViewModelBase
         try
         {
             IsInProgress = true;
-            var settings = new WhisperSettings(Path, $"\"{OutputLocation}\"", Language);
+            var settings = new WhisperSettings(Path, $"\"{OutputLocation}\"", Language, DoSplitting);
             WhisperService.OnProgress += OnProgress;
             await WhisperService.Process(settings, token);
             Progress = 100.0;

@@ -28,7 +28,7 @@ public static partial class WhisperService
             engine.GetMetadata(inputFile);
         }
 
-        if (inputFile.Metadata.Duration < maxDuration)
+        if (!settings.DoSplitting || inputFile.Metadata.Duration < maxDuration)
         {
             await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
             return;
@@ -48,7 +48,8 @@ public static partial class WhisperService
                 var segmentSettings = new WhisperSettings(
                     $"\"{tempPath}/segment-{i}{ext}\"",
                     $"\"{tempPath}/\"",
-                    settings.Language
+                    settings.Language,
+                    true
                 );
                 await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
             }
@@ -117,7 +118,12 @@ public static partial class WhisperService
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            EnvironmentVariables =
+            {
+                ["PYTHONIOENCODING"] = "utf-8",
+                ["PYTHONUTF8"] = "1"
+            }
         };
 
         Logger.LogInformation(info.FileName + " " + info.Arguments);
@@ -322,7 +328,7 @@ public static partial class WhisperService
     private static partial Regex TsvTimestampRegex();
 }
 
-public record WhisperSettings(string FilePath, string OutputLocation, string Language);
+public record WhisperSettings(string FilePath, string OutputLocation, string Language, bool DoSplitting);
 
 public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
 
