@@ -18,6 +18,7 @@ using Google.Apis.YouTube.v3.Data;
 
 namespace Desktop.Services;
 
+//TODO feature: process now, upload later (would take up not trivial amount of space though)
 public static class YoutubeService
 {
     private const string YtKey = "YouTube";
