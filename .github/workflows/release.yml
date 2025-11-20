@@ -62,9 +62,10 @@ jobs:
           tar -xf yt-dlp.zip --directory $target
 
       - name: Export YouTube Client Secret
+        shell: pwsh
         run: |
           $target = "$env:Output_Folder/client_secret.json"
-          echo "$YOUTUBE_CLIENT_SECRET" > "$target"
+          $env:YOUTUBE_CLIENT_SECRET | Out-File -FilePath $target -Encoding utf8
         env:
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
 
