@@ -20,7 +20,7 @@ public class EmptyResult<TError> : Result<object, TError> where TError : Error
     }
 }
 
-public class Result<TValue> : Result<TValue, Error>
+public class Result<TValue> : Result<TValue, Error> where TValue : class
 {
     protected Result(TValue value) : base(value)
     {
@@ -41,7 +41,7 @@ public class Result<TValue> : Result<TValue, Error>
     }
 }
 
-public class Result<TValue, TError> where TError : Error
+public class Result<TValue, TError> where TError : Error where TValue : class
 {
     private readonly TValue? _value;
 
@@ -88,5 +88,10 @@ public class Result<TValue, TError> where TError : Error
     public static implicit operator Result<TValue, TError>(TError error)
     {
         return new Result<TValue, TError>(error);
+    }
+
+    public static Result<TValue, TError> CreatePartialResult(TValue partialValue, TError error)
+    {
+        return new Result<TValue, TError>(error, partialValue);
     }
 }

@@ -11,6 +11,7 @@ using Desktop.Errors;
 using Desktop.Extensions;
 using Desktop.Results;
 using Desktop.ViewModels;
+using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Services;
@@ -23,6 +24,8 @@ namespace Desktop.Services;
 public static class YoutubeService
 {
     private const string YtKey = "YouTube";
+
+    private const string quotaText = "The request cannot be completed because you have exceeded your";
     private static readonly ILogger Logger = new Logger(nameof(YoutubeService));
     private static readonly ILogger YtdlpLogger = new Logger("yt-dlp");
 
@@ -156,24 +159,12 @@ public static class YoutubeService
         Logger.LogInformation("Finding own YouTube Channel including Uploads Playlist (1qu)");
         var request = YouTubeService.Channels.List("contentDetails"); // 1 quota unit
         request.Mine = true;
-        ChannelListResponse? response;
-        try
-        {
-            response = await request.ExecuteAsync();
-        }
-        catch (TokenResponseException e)
-        {
-            return new AuthorizationError(e.Message);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
+        var response = await SendRequest(request.ExecuteAsync());
+        if (!response.Success) return response.Error;
 
-        Logger.LogInformation($"Found {response.Items.Count} Channels. Picking the first one: {response.Items[0].Id}");
+        Logger.LogInformation($"Found {response.Value.Items.Count} Channels. Picking the first one: {response.Value.Items[0].Id}");
 
-        var uploadsPlaylistId = response.Items[0].ContentDetails.RelatedPlaylists.Uploads;
+        var uploadsPlaylistId = response.Value.Items[0].ContentDetails.RelatedPlaylists.Uploads;
         if (uploadsPlaylistId is null) return new YouTubeServiceError("Upload Playlist not found");
         Logger.LogInformation($"Found Upload-Playlist: {uploadsPlaylistId}");
 
@@ -290,6 +281,32 @@ public static class YoutubeService
         var insert = YouTubeService.Captions.Insert(caption, "snippet", fs, "application/octet-stream");
         await insert.UploadAsync(ct);
         Logger.LogInformation($"Successfully uploaded Caption (400qu): {videoId},  language: {language}, path: {path}");
+    }
+
+    private static async Task<Result<TValue, YouTubeServiceError>> SendRequest<TValue>(Task<TValue> executeRequest, CancellationToken ct = default)
+        where TValue : class
+    {
+        TValue? response = null;
+        try
+        {
+            response = await executeRequest.WaitAsync(ct);
+            return response;
+        }
+        catch (TokenResponseException e)
+        {
+            return new AuthorizationError(e.Message);
+        }
+        catch (GoogleApiException e) when (e.Message.Contains(quotaText))
+        {
+            var err = new QuotaExceededError();
+            if (response is null) return err;
+            var r = Result<TValue, QuotaExceededError>.CreatePartialResult(response, err);
+            return (r as Result<TValue, YouTubeServiceError>)!;
+        }
+        catch (Exception e)
+        {
+            return new YouTubeServiceError(e.Message);
+        }
     }
 }
 

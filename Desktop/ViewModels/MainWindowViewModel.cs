@@ -114,6 +114,17 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             switch (videoFiles.Error)
             {
                 case QuotaExceededError:
+                    if (videoFiles.PartialValue is null)
+                    {
+                        var confirmation = new ConfirmationWindow
+                        {
+                            DataContext = new ConfirmationViewModel("Quota exceeded",
+                                $"The daily Quota for YouTube has been exceeded. You can add all {videoFiles.PartialValue.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {videoFiles.PartialValue.Length} Videos to the session?")
+                        };
+                        var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
+                        if (confirmationResponse is not true) return;
+                    }
+
                     var confirmation = new ConfirmationWindow()
                     {
                         DataContext = new ConfirmationViewModel("Quota exceeded",
@@ -133,6 +144,10 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
                 case AuthorizationError e:
                     var authErrorDialog = new ErrorWindow() { DataContext = new ErrorViewModel($"There was an Authorization Error:\n{e.Message}") };
                     await App.OpenModal<MainWindow, bool?>(authErrorDialog);
+                    return;
+                case { } e:
+                    var genericErrorDialog = new ErrorWindow { DataContext = new ErrorViewModel($"There was an Error with YouTube:\n{e.Message}") };
+                    await App.OpenModal<MainWindow, bool?>(genericErrorDialog);
                     return;
                 default:
                     throw new NotImplementedException("Error not handled");
