@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Desktop.Exceptions.WhisperService;
+using Desktop.Exceptions.YouTubeService;
 using MediaToolkit;
 using MediaToolkit.Model;
 
@@ -129,9 +130,16 @@ public static partial class WhisperService
                 var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                 if (ConfigService.Config.OutputFormat == OutputFormat.ALL) captionExtension = "vtt";
                 var vttOutputFile = $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
-                Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
-                await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
-                Logger.LogInformation("Caption Uploaded");
+                try
+                {
+                    Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
+                    await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
+                    Logger.LogInformation("Caption Uploaded");
+                }
+                catch (QuotaExceededException e)
+                {
+                    throw new QuotaExceededException<string>(e, vttOutputFile);
+                }
             }
         }
         finally
@@ -180,7 +188,16 @@ public static partial class WhisperService
         proc.BeginOutputReadLine();
         proc.BeginErrorReadLine();
 
-        await proc.WaitForExitAsync(ct);
+        try
+        {
+            await proc.WaitForExitAsync(ct);
+        }
+        catch (TaskCanceledException)
+        {
+            proc.Kill();
+            throw;
+        }
+
         if (proc.ExitCode != 0) throw new WhisperException(proc.ExitCode);
 
         proc.OutputDataReceived -= ProgressHandler;
@@ -263,7 +280,15 @@ public static partial class WhisperService
         proc.BeginErrorReadLine();
         proc.BeginOutputReadLine();
 
-        await proc.WaitForExitAsync(ct);
+        try
+        {
+            await proc.WaitForExitAsync(ct);
+        }
+        catch (TaskCanceledException)
+        {
+            proc.Kill();
+            throw;
+        }
 
         proc.ErrorDataReceived -= FfmpegInfoLogger;
         proc.OutputDataReceived -= FfmpegInfoLogger;

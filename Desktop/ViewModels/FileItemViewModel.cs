@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Desktop.Exceptions.WhisperService;
+using Desktop.Exceptions.YouTubeService;
 using Desktop.Services;
 using Desktop.Views;
 using Desktop.Views.Modals;
@@ -83,8 +85,40 @@ public partial class FileItemViewModel : ViewModelBase
         }
         catch (TaskCanceledException)
         {
-            Progress = 0;
             _logger.LogInformation($"Cancelled {Path}");
+            Progress = 0;
+        }
+        catch (YtdlpException e)
+        {
+            _logger.LogError($"yt-dlp had an error for {Path}: {e.Message}");
+            var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not download the video from YouTube:\n{e.Message}") };
+            await App.OpenModal<MainWindow, bool?>(errorWindow);
+            Progress = 0;
+        }
+        catch (FfmpegException e)
+        {
+            _logger.LogError($"ffmpeg had an error for {Path}: {e.Message}");
+            var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not split the file into segments:\n{e.Message}") };
+            await App.OpenModal<MainWindow, bool?>(errorWindow);
+            Progress = 0;
+        }
+        catch (WhisperException e)
+        {
+            _logger.LogError($"whisper had an error for {Path}: {e.Message}");
+            var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not generate captions:\n{e.Message}") };
+            await App.OpenModal<MainWindow, bool?>(errorWindow);
+            Progress = 0;
+        }
+        catch (QuotaExceededException<string> e)
+        {
+            _logger.LogError($"Upload Quota exceeded at {Path}");
+            var errorWindow = new ErrorWindow
+            {
+                DataContext = new ErrorViewModel(
+                    $"YouTube API Quota exceeded. Could not upload the Caption to YouTube.\nThe generated Caption-File can be found at {e.PartialValue}")
+            };
+            await App.OpenModal<MainWindow, bool?>(errorWindow);
+            Progress = 0;
         }
         finally
         {

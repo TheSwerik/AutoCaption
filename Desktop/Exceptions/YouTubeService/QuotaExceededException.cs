@@ -1,8 +1,10 @@
-﻿namespace Desktop.Exceptions.YouTubeService;
+﻿using System;
 
-public class QuotaExceededException<TValue>(TValue? partialValue = default) : QuotaExceededException
+namespace Desktop.Exceptions.YouTubeService;
+
+public class QuotaExceededException<TValue>(Exception innerException, TValue? partialValue = default) : QuotaExceededException(innerException)
 {
     public TValue? PartialValue { get; } = partialValue;
 }
 
-public abstract class QuotaExceededException : YouTubeServiceException;
+public abstract class QuotaExceededException(Exception innerException) : YouTubeServiceException(innerException: innerException);

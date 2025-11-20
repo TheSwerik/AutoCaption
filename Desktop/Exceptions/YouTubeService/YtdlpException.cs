@@ -1,5 +1,3 @@
-﻿using Desktop.Exceptions.YouTubeService;
+﻿namespace Desktop.Exceptions.YouTubeService;
 
-namespace Desktop.Exceptions;
-
-public class YtdlpException(int exitCode) : YouTubeServiceException($"yt-dlp exited with ExitCode: {exitCode}");
+public class YtdlpException(int exitCode) : YouTubeServiceException($"yt-dlp exited with ExitCode: {exitCode}.\nView the logs for more information.");

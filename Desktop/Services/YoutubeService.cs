@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Desktop.Exceptions;
 using Desktop.Exceptions.YouTubeService;
 using Desktop.ViewModels;
 using Google;
@@ -70,9 +69,9 @@ public static class YoutubeService
         {
             allVideoIds = await GetAllVideoIdsAsync(visibilities);
         }
-        catch (QuotaExceededException)
+        catch (QuotaExceededException e)
         {
-            throw new QuotaExceededException<ImmutableArray<FileItemViewModel>?>();
+            throw new QuotaExceededException<ImmutableArray<FileItemViewModel>?>(e);
         }
 
         var result = new List<FileItemViewModel>();
@@ -84,9 +83,9 @@ public static class YoutubeService
                 var captionFiles = captions.Select(c => new FileItemViewModel($"{YtKey}:{id}") { Language = c.Snippet.Language });
                 result.AddRange(captionFiles);
             }
-            catch (QuotaExceededException)
+            catch (QuotaExceededException e)
             {
-                throw new QuotaExceededException<ImmutableArray<FileItemViewModel>?>([..result]);
+                throw new QuotaExceededException<ImmutableArray<FileItemViewModel>?>(e, [..result]);
             }
         }
 
@@ -103,6 +102,7 @@ public static class YoutubeService
             "-x",
             $"--ffmpeg-location \"{ConfigService.Config.FfmpegLocation}\"",
             "-f bestaudio",
+            "--restrict-filenames",
             $"-o \"{outputPath}/%(title)s.%(ext)s\"",
             $"https://youtu.be/{id}"
         ];
@@ -131,7 +131,15 @@ public static class YoutubeService
         proc.BeginErrorReadLine();
         proc.BeginOutputReadLine();
 
-        await proc.WaitForExitAsync(ct);
+        try
+        {
+            await proc.WaitForExitAsync(ct);
+        }
+        catch (TaskCanceledException)
+        {
+            proc.Kill();
+            throw;
+        }
 
         proc.ErrorDataReceived -= YtdlpErrorLogger;
         proc.OutputDataReceived -= YtdlpInfoLogger;
@@ -144,10 +152,21 @@ public static class YoutubeService
 
         void FilePathParser(object _, DataReceivedEventArgs args)
         {
-            const string extractionString = "[ExtractAudio] Destination: ";
-            if (args.Data is null || !args.Data.StartsWith(extractionString)) return;
+            const string extractAudioString = "[ExtractAudio]";
+            if (args.Data is null || !args.Data.StartsWith(extractAudioString)) return;
 
-            fileName = args.Data[extractionString.Length..];
+            const string extractionString = "[ExtractAudio] Destination: ";
+            if (args.Data.StartsWith(extractionString))
+            {
+                fileName = args.Data[extractionString.Length..];
+            }
+            else
+            {
+                const string noConversionString = "[ExtractAudio] Not converting audio ";
+                const string noConversionStringEnd = "; the file is already in a common audio format";
+                fileName = args.Data[noConversionString.Length..].Split(noConversionStringEnd)[0];
+            }
+
             Logger.LogDebug($"Found Destination-Information: {fileName}");
         }
     }
@@ -231,9 +250,25 @@ public static class YoutubeService
                 YouTubeService.Scope.YoutubeForceSsl, // read captions
                 YouTubeService.Scope.YoutubeUpload // upload captions
             ];
-            var clientSecret = await GoogleClientSecrets.FromStreamAsync(stream, ct);
-#if DEBUG
 
+            GoogleClientSecrets? clientSecret = null;
+            var i = 0;
+            do
+            {
+                try
+                {
+                    using var src = new CancellationTokenSource();
+                    src.CancelAfter(TimeSpan.FromMinutes(5));
+                    clientSecret = await GoogleClientSecrets.FromStreamAsync(stream, src.Token);
+                }
+                catch (TaskCanceledException)
+                {
+                    Logger.LogInformation($"Cancelled YouTube Service Login after 5 Minutes on try {i}");
+                }
+            } while (i++ < 3);
+
+            if (clientSecret is null) throw new YouTubeServiceException("Could not log into YouTube after 3 tries.");
+#if DEBUG
             const string userId = "AutoCaptionUserLimitExceeded";
             // const string userId = "AutoCaptionUserLimitNotExceeded";
 #else
@@ -304,7 +339,7 @@ public static class YoutubeService
         // var extension = Path.GetExtension(path);
         await using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
         var insert = YouTubeService.Captions.Insert(caption, "snippet", fs, "application/octet-stream");
-        await insert.UploadAsync(ct);
+        await SendRequest(insert.UploadAsync(ct), ct);
         Logger.LogInformation($"Successfully uploaded Caption (400qu): {videoId},  language: {language}, path: {path}");
     }
 
@@ -323,7 +358,7 @@ public static class YoutubeService
         }
         catch (GoogleApiException e) when (e.Message.Contains(QuotaText))
         {
-            throw new QuotaExceededException<TValue>(response);
+            throw new QuotaExceededException<TValue>(e, response);
         }
         catch (Exception e) when (e is not null && e is not YouTubeServiceException)
         {
