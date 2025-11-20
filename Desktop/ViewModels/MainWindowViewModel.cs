@@ -207,19 +207,16 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task ClearAll()
     {
-        var mainWindow = App.Windows.First(w => w is MainWindow);
         var dialog = new ConfirmationWindow
         {
             DataContext = new ConfirmationViewModel("Clear All",
                 "Do you want to remove every File? Even uncompleted and currently in progress?")
         };
-        App.Windows.Add(dialog);
-        var response = await dialog.ShowDialog<bool?>(mainWindow);
-        App.Windows.Remove(dialog);
+        var response = await App.OpenModal<MainWindow, bool?>(dialog);
         if (response is null || !response.Value) return;
 
         await Cancel();
-        var files = Files.Where(f => f.IsCompleted).Select(f => f.Path).ToList();
+        var files = Files.Select(f => f.Path).ToList();
         foreach (var file in files) RemoveFile(file);
     }
 
