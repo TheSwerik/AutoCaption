@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
@@ -12,7 +13,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Desktop.Errors;
+using Desktop.Exceptions.YouTubeService;
 using Desktop.Services;
 using Desktop.Views;
 using Desktop.Views.Modals;
@@ -108,53 +109,50 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
 
         if (response is null) return;
 
-        var videoFiles = await YoutubeService.GetAllVideosWithoutCustomCaptions(response.Visibilities, response.Skip);
-        if (!videoFiles.Success)
+        ImmutableArray<FileItemViewModel> videoFiles;
+        try
         {
-            switch (videoFiles.Error)
+            videoFiles = await YoutubeService.GetAllVideosWithoutCustomCaptions(response.Visibilities, response.Skip);
+        }
+        catch (QuotaExceededException<ImmutableArray<FileItemViewModel>?> e)
+        {
+            if (e.PartialValue is null)
             {
-                case QuotaExceededError:
-                    if (videoFiles.PartialValue is null)
-                    {
-                        var confirmation = new ConfirmationWindow
-                        {
-                            DataContext = new ConfirmationViewModel("Quota exceeded",
-                                $"The daily Quota for YouTube has been exceeded. You can add all {videoFiles.PartialValue.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {videoFiles.PartialValue.Length} Videos to the session?")
-                        };
-                        var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
-                        if (confirmationResponse is not true) return;
-                    }
-
-                    var confirmation = new ConfirmationWindow()
-                    {
-                        DataContext = new ConfirmationViewModel("Quota exceeded",
-                            $"The daily Quota for YouTube has been exceeded. You can add all {videoFiles.PartialValue.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {videoFiles.PartialValue.Length} Videos to the session?")
-                    };
-                    var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
-                    if (confirmationResponse is not true) return;
-
-                    foreach (var file in videoFiles.PartialValue) Files.Add(file);
-                    RegenerateFileViews();
-                    SaveSession();
-                    return;
-                case NoVisibilitySelectedError:
-                    var errorDialog = new ErrorWindow() { DataContext = new ErrorViewModel("You have not selected any Visbility, so no Videos are found.") };
-                    await App.OpenModal<MainWindow, bool?>(errorDialog);
-                    return;
-                case AuthorizationError e:
-                    var authErrorDialog = new ErrorWindow() { DataContext = new ErrorViewModel($"There was an Authorization Error:\n{e.Message}") };
-                    await App.OpenModal<MainWindow, bool?>(authErrorDialog);
-                    return;
-                case { } e:
-                    var genericErrorDialog = new ErrorWindow { DataContext = new ErrorViewModel($"There was an Error with YouTube:\n{e.Message}") };
-                    await App.OpenModal<MainWindow, bool?>(genericErrorDialog);
-                    return;
-                default:
-                    throw new NotImplementedException("Error not handled");
+                var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel("The daily Quota for YouTube has been exceeded.") };
+                await App.OpenModal<MainWindow, bool?>(errorWindow);
+                return;
             }
+
+            var confirmation = new ConfirmationWindow
+            {
+                DataContext = new ConfirmationViewModel("Quota exceeded",
+                    $"The daily Quota for YouTube has been exceeded. You can add all {e.PartialValue.Value.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {e.PartialValue.Value.Length} Videos to the session?")
+            };
+            var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
+            if (confirmationResponse is not true) return;
+
+            videoFiles = e.PartialValue.Value;
+        }
+        catch (NoVisibilitySelectedException)
+        {
+            var errorDialog = new ErrorWindow { DataContext = new ErrorViewModel("You have not selected any Visbility, so no Videos are found.") };
+            await App.OpenModal<MainWindow, bool?>(errorDialog);
+            return;
+        }
+        catch (AuthorizationException e)
+        {
+            var authErrorDialog = new ErrorWindow { DataContext = new ErrorViewModel($"There was an Authorization Error:\n{e.Message}") };
+            await App.OpenModal<MainWindow, bool?>(authErrorDialog);
+            return;
+        }
+        catch (YouTubeServiceException e)
+        {
+            var genericErrorDialog = new ErrorWindow { DataContext = new ErrorViewModel($"There was an Error with YouTube:\n{e.Message}") };
+            await App.OpenModal<MainWindow, bool?>(genericErrorDialog);
+            return;
         }
 
-        foreach (var file in videoFiles.Value) Files.Add(file);
+        foreach (var file in videoFiles) Files.Add(file);
         RegenerateFileViews();
         SaveSession();
     }

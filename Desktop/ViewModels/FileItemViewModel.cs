@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +24,8 @@ public partial class FileItemViewModel : ViewModelBase
 
     public FileItemViewModel()
     {
+        _language = "";
+        _outputLocation = "";
     }
 
     public FileItemViewModel(string path)
@@ -76,18 +77,14 @@ public partial class FileItemViewModel : ViewModelBase
             IsInProgress = true;
             var settings = new WhisperSettings(Path, $"\"{OutputLocation}\"", Language, DoSplitting);
             WhisperService.OnProgress += OnProgress;
-            var result = await WhisperService.Process(settings, token);
-            if (!result.Success) throw new NotImplementedException("Error not handled");
+            await WhisperService.Process(settings, token);
             Progress = 100.0;
             IsCompleted = true;
         }
         catch (TaskCanceledException)
         {
-            _logger.LogError($"Cancelled {Path}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex.Message + '\n' + ex.StackTrace);
+            Progress = 0;
+            _logger.LogInformation($"Cancelled {Path}");
         }
         finally
         {

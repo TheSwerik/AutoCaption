@@ -6,8 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Desktop.Errors;
-using Desktop.Results;
+using Desktop.Exceptions.WhisperService;
 using MediaToolkit;
 using MediaToolkit.Model;
 
@@ -20,7 +19,7 @@ public static partial class WhisperService
     private static readonly ILogger FfmpegLogger = new Logger("FFmpeg");
     public static event ProgressEventHandler? OnProgress;
 
-    public static async Task<EmptyResult<WhisperError>> Process(WhisperSettings settings, CancellationToken ct)
+    public static async Task Process(WhisperSettings settings, CancellationToken ct)
     {
         Logger.LogInformation($"Beginning processing of {settings}.");
         var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
@@ -31,10 +30,9 @@ public static partial class WhisperService
         {
             Logger.LogInformation($"Since {settings.FilePath} is a YouTube link, downloading audio file");
             var path = await YoutubeService.DownloadAudioAsync(youtubeVideoId!, tempPath, ct);
-            if (!path.Success) return path.Error;
 
             Logger.LogInformation($"Audio downloaded successfully to {path}");
-            settings = settings with { FilePath = path.Value };
+            settings = settings with { FilePath = path };
         }
 
         var maxDuration = ConfigService.Config.ChunkSize;
@@ -49,25 +47,22 @@ public static partial class WhisperService
         {
             Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
             Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
-            var result = await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
-            if (!result.Success) return result.Error;
+            await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
             Logger.LogInformation($"Processing of {settings.FilePath} completed.");
-            if (!isYoutube) return EmptyResult<WhisperError>.SuccessFull;
+            if (!isYoutube) return;
 
             var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
             var vttOutputFile = $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
             Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
             await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
             Logger.LogInformation("Caption Uploaded");
-            return EmptyResult<WhisperError>.SuccessFull;
         }
 
         try
         {
             // split file into 30min segments
             Logger.LogInformation($"Splitting {settings.FilePath} to temp path {tempPath} into {maxDuration} segments");
-            var splitResult = await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
-            if (!splitResult.Success) return splitResult.Error;
+            await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
             Logger.LogInformation("Splitting completed");
             var ext = Path.GetExtension(settings.FilePath);
 
@@ -83,8 +78,7 @@ public static partial class WhisperService
                     settings.Language,
                     true
                 );
-                var result = await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
-                if (!result.Success) return result.Error;
+                await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
                 Logger.LogInformation($"Processing of Segment {i} completed.");
             }
 
@@ -144,12 +138,9 @@ public static partial class WhisperService
         {
             Directory.Delete(tempPath, true);
         }
-
-        return EmptyResult<WhisperError>.SuccessFull;
     }
 
-    private static async Task<EmptyResult<WhisperError>> Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset,
-        CancellationToken ct)
+    private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset, CancellationToken ct)
     {
         List<string> arguments =
         [
@@ -190,12 +181,12 @@ public static partial class WhisperService
         proc.BeginErrorReadLine();
 
         await proc.WaitForExitAsync(ct);
-        if (proc.ExitCode != 0) return new WhisperError(proc.ExitCode);
+        if (proc.ExitCode != 0) throw new WhisperException(proc.ExitCode);
 
         proc.OutputDataReceived -= ProgressHandler;
         proc.OutputDataReceived -= WhisperInfoLogger;
         proc.ErrorDataReceived -= WhisperErrorLogger;
-        return EmptyResult<WhisperError>.SuccessFull;
+        return;
 
         void ProgressHandler(object _, DataReceivedEventArgs args)
         {
@@ -229,10 +220,12 @@ public static partial class WhisperService
         var timestamp = TimeSpan.Parse(timestampString);
 
         var progress = (segmentOffset + timestamp) / totalDuration * 100.0;
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         OnProgress?.Invoke(null, new ProgressEventArgs(progress));
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
     }
 
-    private static async Task<EmptyResult<FfmpegError>> SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
+    private static async Task SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
     {
         Directory.CreateDirectory(tempPath);
 
@@ -275,9 +268,7 @@ public static partial class WhisperService
         proc.ErrorDataReceived -= FfmpegInfoLogger;
         proc.OutputDataReceived -= FfmpegInfoLogger;
 
-        return proc.ExitCode != 0
-            ? new FfmpegError(proc.ExitCode)
-            : EmptyResult<FfmpegError>.SuccessFull;
+        if (proc.ExitCode != 0) throw new FfmpegException(proc.ExitCode);
     }
 
     private static async Task<bool> IsAudio(string path, CancellationToken ct)
