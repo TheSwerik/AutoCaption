@@ -115,7 +115,7 @@ public partial class FileItemViewModel : ViewModelBase
             var errorWindow = new ErrorWindow
             {
                 DataContext = new ErrorViewModel(
-                    $"YouTube API Quota exceeded. Could not upload the Caption to YouTube.\nThe generated Caption-File can be found at {e.PartialValue}")
+                    $"YouTube API Quota exceeded. Could not upload the Caption to YouTube.\nThe generated Caption-File can be found at\n{e.PartialValue}")
             };
             await App.OpenModal<MainWindow, bool?>(errorWindow);
             Progress = 0;
