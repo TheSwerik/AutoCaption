@@ -116,7 +116,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         }
         catch (QuotaExceededException<ImmutableArray<FileItemViewModel>?> e)
         {
-            if (e.PartialValue is null)
+            if (e.PartialValue is null || e.PartialValue.Value.Length == 0)
             {
                 var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel("The daily Quota for YouTube has been exceeded.") };
                 await App.OpenModal<MainWindow, bool?>(errorWindow);
@@ -126,7 +126,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             var confirmation = new ConfirmationWindow
             {
                 DataContext = new ConfirmationViewModel("Quota exceeded",
-                    $"The daily Quota for YouTube has been exceeded. You can add all {e.PartialValue.Value.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {e.PartialValue.Value.Length} Videos to the session?")
+                    $"The daily Quota for YouTube has been exceeded.\nYou can add all {e.PartialValue.Value.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {e.PartialValue.Value.Length} Videos to the session?")
             };
             var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
             if (confirmationResponse is not true) return;
