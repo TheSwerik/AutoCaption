@@ -23,8 +23,7 @@
                         MaterialOpacity="0.9" />
                 </ExperimentalAcrylicBorder.Material>
             </ExperimentalAcrylicBorder>
-            <ExperimentalAcrylicBorder IsHitTestVisible="False"
-                                       IsVisible="{Binding IsCompleted}">
+            <ExperimentalAcrylicBorder IsHitTestVisible="False">
                 <ExperimentalAcrylicBorder.Material>
                     <ExperimentalAcrylicMaterial
                         BackgroundSource="Digger"
@@ -32,6 +31,27 @@
                         TintOpacity="0.3"
                         MaterialOpacity="0.9" />
                 </ExperimentalAcrylicBorder.Material>
+                <TextBlock.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="IsCompleted"/>
+                        <Binding Path="CaptionUploaded"/>
+                    </MultiBinding>
+                </TextBlock.IsVisible>
+            </ExperimentalAcrylicBorder>
+            <ExperimentalAcrylicBorder IsHitTestVisible="False">
+                <ExperimentalAcrylicBorder.Material>
+                    <ExperimentalAcrylicMaterial
+                        BackgroundSource="Digger"
+                        TintColor="Orange"
+                        TintOpacity="0.8"
+                        MaterialOpacity="0.9" />
+                </ExperimentalAcrylicBorder.Material>
+                <TextBlock.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="IsCompleted"/>
+                        <Binding Path="!CaptionUploaded"/>
+                    </MultiBinding>
+                </TextBlock.IsVisible>
             </ExperimentalAcrylicBorder>
 
             <DockPanel Margin="10 10 10 0" LastChildFill="True">

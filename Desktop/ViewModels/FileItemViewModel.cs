@@ -23,6 +23,7 @@ public partial class FileItemViewModel : ViewModelBase
     [ObservableProperty] private string _outputLocation;
     [ObservableProperty] private string _path = "";
     [ObservableProperty] private double _progress;
+    [ObservableProperty] private bool _captionUploaded;
 
     public FileItemViewModel()
     {
@@ -82,6 +83,7 @@ public partial class FileItemViewModel : ViewModelBase
             await WhisperService.Process(settings, token);
             Progress = 100.0;
             IsCompleted = true;
+            CaptionUploaded = true;
         }
         catch (TaskCanceledException)
         {
@@ -112,13 +114,22 @@ public partial class FileItemViewModel : ViewModelBase
         catch (QuotaExceededException<string> e)
         {
             _logger.LogError($"Upload Quota exceeded at {Path}");
-            var errorWindow = new ErrorWindow
+            if (ConfigService.Config.GenerateWithoutUploading)
             {
-                DataContext = new ErrorViewModel(
-                    $"YouTube API Quota exceeded. Could not upload the Caption to YouTube.\nThe generated Caption-File can be found at\n{e.PartialValue}")
-            };
-            await App.OpenModal<MainWindow, bool?>(errorWindow);
-            Progress = 0;
+                CaptionUploaded = false;
+                IsCompleted = true;
+                Progress = 100.0;
+            }
+            else
+            {
+                var errorWindow = new ErrorWindow
+                {
+                    DataContext = new ErrorViewModel(
+                        $"YouTube API Quota exceeded. Could not upload the Caption to YouTube.\nThe generated Caption-File can be found at\n{e.PartialValue}")
+                };
+                await App.OpenModal<MainWindow, bool?>(errorWindow);
+                Progress = 0;
+            }
         }
         finally
         {

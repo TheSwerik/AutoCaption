@@ -49,7 +49,7 @@
                 </Button>
             </StackPanel>
 
-            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
                   ColumnDefinitions="*,*"
                   VerticalAlignment="Stretch">
 
@@ -195,6 +195,15 @@
                          HorizontalContentAlignment="Stretch"
                          Name="YouTubeCaptionName"
                          Text="{Binding Settings.YouTubeCaptionName}" />
+
+                <Label Grid.Row="10" Grid.Column="0"
+                       Target="GenerateWithoutUploading">
+                    Continue Generating from YouTube even if Quota limit is reached?
+                </Label>
+                <CheckBox Grid.Row="10" Grid.Column="1"
+                          HorizontalAlignment="Center"
+                          Name="GenerateWithoutUploading"
+                          IsChecked="{Binding Settings.GenerateWithoutUploading}" />
 
             </Grid>
         </DockPanel>

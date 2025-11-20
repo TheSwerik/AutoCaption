@@ -36,7 +36,8 @@ public static class ConfigService
             DoSplitting = true,
             Language = "en",
             OutputLocation = "./",
-            YouTubeCaptionName = ""
+            YouTubeCaptionName = "",
+            GenerateWithoutUploading = true
         };
         Save();
     }
@@ -224,6 +225,16 @@ public static class ConfigService
                 Save();
             }
         } = "";
+
+        public bool GenerateWithoutUploading
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = true;
     }
 }
 

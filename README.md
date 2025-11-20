@@ -72,3 +72,14 @@ This setting will be displayed on the caption itself:<br><img src="img/caption n
 
 - `English` is Displayed if you leave the Setting blank
 - `English - AutoCaption` is Displayed if you set the Setting to `AutoCaption`
+
+### Continue Generating from YouTube even if Quota limit is reached?
+
+Importing every video from your channel to the session should normally be possible even considering the Quota.  
+But Uploading one caption file to one video has the Quota cost of importing 8 Videos. You will reach this limit pretty quickly  
+With this setting enabled, AutoCaption will continue to go through your session and process every video, even if it cannot upload the captions, so that you can upload them manually afterwards (since the caption files will be exported still).
+This is possible since processing a file has no quota cost at all.
+
+If you disable this option, once the quota limit is reached, processing will be paused and you will be notified.
+
+If you enable this option, videos, for which the caption could not be uploaded, will be orange but the generated caption file will exist and processing will continue.
