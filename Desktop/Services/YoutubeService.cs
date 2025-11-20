@@ -13,6 +13,7 @@ using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Services;
+using Google.Apis.Upload;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 
@@ -241,7 +242,6 @@ public static class YoutubeService
     private static async Task InitYouTubeServiceAsync(CancellationToken ct = default)
     {
         Logger.LogInformation("Initializing YouTube Service");
-        UserCredential credential;
 
         string[] scopes =
         [
@@ -278,7 +278,7 @@ public static class YoutubeService
 #else
             const string userId = "AutoCaptionUser";
 #endif
-        credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(clientSecret.Secrets, scopes, userId, ct);
+        var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(clientSecret.Secrets, scopes, userId, ct);
 
         YouTubeService = new YouTubeService(new BaseClientService.Initializer
         {
@@ -342,17 +342,40 @@ public static class YoutubeService
         // var extension = Path.GetExtension(path);
         await using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
         var insert = YouTubeService.Captions.Insert(caption, "snippet", fs, "application/octet-stream");
-        await SendRequest(insert.UploadAsync(ct), ct);
-        Logger.LogInformation($"Successfully uploaded Caption (400qu): {videoId},  language: {language}, path: {path}");
+        var result = await SendRequest(insert.UploadAsync(ct));
+        if (result.Status == UploadStatus.Completed)
+        {
+            Logger.LogInformation($"Successfully uploaded Caption (400qu): {videoId},  language: {language}, path: {path}");
+            return;
+        }
+
+        // there was an Exception that got swallowed, so unswallow it:
+        try
+        {
+            throw result.Exception;
+        }
+        catch (TokenResponseException e)
+        {
+            throw new AuthorizationException(e.Message, e);
+        }
+        catch (GoogleApiException e) when (e.Message.Contains(QuotaText))
+        {
+            throw new QuotaExceededException<string>(e, Path.GetFullPath(path));
+        }
+        catch (Exception e) when (e is not null && e is not YouTubeServiceException)
+        {
+            if (e is not null) throw new YouTubeServiceException(e.Message, e);
+            throw;
+        }
     }
 
-    private static async Task<TValue> SendRequest<TValue>(Task<TValue> executeRequest, CancellationToken ct = default)
+    private static async Task<TValue> SendRequest<TValue>(Task<TValue> executeRequest)
         where TValue : class
     {
         TValue? response = null;
         try
         {
-            response = await executeRequest.WaitAsync(ct);
+            response = await executeRequest;
             return response;
         }
         catch (TokenResponseException e)
