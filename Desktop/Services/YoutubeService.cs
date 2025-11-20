@@ -243,39 +243,41 @@ public static class YoutubeService
         Logger.LogInformation("Initializing YouTube Service");
         UserCredential credential;
 
-        await using (var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read))
+        string[] scopes =
+        [
+            YouTubeService.Scope.YoutubeForceSsl, // read captions
+            YouTubeService.Scope.YoutubeUpload // upload captions
+        ];
+
+        var stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read);
+        GoogleClientSecrets? clientSecret = null;
+        var i = 0;
+        do
         {
-            string[] scopes =
-            [
-                YouTubeService.Scope.YoutubeForceSsl, // read captions
-                YouTubeService.Scope.YoutubeUpload // upload captions
-            ];
-
-            GoogleClientSecrets? clientSecret = null;
-            var i = 0;
-            do
+            try
             {
-                try
-                {
-                    using var src = new CancellationTokenSource();
-                    src.CancelAfter(TimeSpan.FromMinutes(5));
-                    clientSecret = await GoogleClientSecrets.FromStreamAsync(stream, src.Token);
-                }
-                catch (TaskCanceledException)
-                {
-                    Logger.LogInformation($"Cancelled YouTube Service Login after 5 Minutes on try {i}");
-                }
-            } while (i++ < 3);
+                using var src = new CancellationTokenSource();
+                src.CancelAfter(TimeSpan.FromMinutes(5));
+                clientSecret = await GoogleClientSecrets.FromStreamAsync(stream, src.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                Logger.LogInformation($"Cancelled YouTube Service Login after 5 Minutes on try {i}");
+                await stream.DisposeAsync();
+                stream = new FileStream("client_secret.json", FileMode.Open, FileAccess.Read);
+            }
+        } while (i++ < 3);
 
-            if (clientSecret is null) throw new YouTubeServiceException("Could not log into YouTube after 3 tries.");
+        await stream.DisposeAsync();
+
+        if (clientSecret is null) throw new YouTubeServiceException("Could not log into YouTube after 3 tries.");
 #if DEBUG
-            const string userId = "AutoCaptionUserLimitExceeded";
-            // const string userId = "AutoCaptionUserLimitNotExceeded";
+        const string userId = "AutoCaptionUserLimitExceeded";
+        // const string userId = "AutoCaptionUserLimitNotExceeded";
 #else
             const string userId = "AutoCaptionUser";
 #endif
-            credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(clientSecret.Secrets, scopes, userId, ct);
-        }
+        credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(clientSecret.Secrets, scopes, userId, ct);
 
         YouTubeService = new YouTubeService(new BaseClientService.Initializer
         {
