@@ -259,6 +259,7 @@ public static class YoutubeService
                 using var src = new CancellationTokenSource();
                 src.CancelAfter(TimeSpan.FromMinutes(5));
                 clientSecret = await GoogleClientSecrets.FromStreamAsync(stream, src.Token);
+                break;
             }
             catch (TaskCanceledException)
             {
