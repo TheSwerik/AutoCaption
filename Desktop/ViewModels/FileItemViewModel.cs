@@ -114,13 +114,7 @@ public partial class FileItemViewModel : ViewModelBase
         catch (QuotaExceededException<string> e)
         {
             _logger.LogError($"Upload Quota exceeded at {Path}");
-            if (ConfigService.Config.GenerateWithoutUploading)
-            {
-                CaptionUploaded = false;
-                IsCompleted = true;
-                Progress = 100.0;
-            }
-            else
+            if (!ConfigService.Config.GenerateWithoutUploading)
             {
                 var errorWindow = new ErrorWindow
                 {
@@ -128,8 +122,11 @@ public partial class FileItemViewModel : ViewModelBase
                         $"YouTube API Quota exceeded. Could not upload the Caption to YouTube.\nThe generated Caption-File can be found at\n{e.PartialValue}")
                 };
                 await App.OpenModal<MainWindow, bool?>(errorWindow);
-                Progress = 0;
             }
+
+            CaptionUploaded = false;
+            IsCompleted = true;
+            Progress = 100.0;
         }
         finally
         {
