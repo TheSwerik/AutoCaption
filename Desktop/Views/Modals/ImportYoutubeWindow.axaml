@@ -3,7 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:viewModels="clr-namespace:Desktop.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
+        mc:Ignorable="d"
         x:Class="Desktop.Views.Modals.ImportYoutubeWindow"
         x:DataType="viewModels:ImportYoutubeViewModel"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent"
@@ -24,7 +24,6 @@
         </StackPanel>
 
         <StackPanel>
-
             <TextBlock TextWrapping="Wrap">
                 <Run Text="Are you sure you want to import all your videos from YouTube?" />
                 <LineBreak />
@@ -36,11 +35,37 @@
                 <Run Text="    a. English" />
                 <LineBreak />
                 <Run Text="    b. the video's audio language (ignore if English)" />
-                <LineBreak />
-                <Run Text="2. The Visibility filter." />
-                <LineBreak />
-                <Run Text="3. The Skip filter." />
-                <LineBreak />
+            </TextBlock>
+            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*" RowSpacing="10" Margin="0 10">
+                <Label Grid.Row="0" Grid.Column="0"
+                       Target="Visibility">
+                    2. The Visibility filter:
+                </Label>
+                <ListBox Grid.Row="0" Grid.Column="1"
+                         HorizontalAlignment="Stretch"
+                         Name="Visibility"
+                         ItemsSource="{Binding AllVisibilities}"
+                         SelectedItems="{Binding Visibilities}"
+                         SelectionMode="Multiple,Toggle"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding .}"
+                                       HorizontalAlignment="Center" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Label Grid.Row="1" Grid.Column="0"
+                       Target="Skip">
+                    3. The Skip filter:
+                </Label>
+                <NumericUpDown Grid.Row="1" Grid.Column="1"
+                               Name="Skip"
+                               Minimum="0"
+                               Value="{Binding Skip}" />
+            </Grid>
+            <TextBlock TextWrapping="Wrap">
                 <Run Text="Based on these filters, ALL of your uploaded videos will be scraped and added to the Session." />
                 <LineBreak />
                 <Run Text="This operation is read only until you click on &quot;Start&quot; (and they start processing)" />
@@ -52,35 +77,6 @@
                 <LineBreak />
                 <Run Text="Do you want to proceed?" />
             </TextBlock>
-            <Grid RowDefinitions="*,*" ColumnDefinitions="*,*">
-
-                <Label Grid.Row="0" Grid.Column="0"
-                       Target="Visibility">
-                    Visibility:
-                </Label>
-                <ListBox Grid.Row="0" Grid.Column="1"
-                         HorizontalAlignment="Stretch"
-                         Name="Visibility"
-                         ItemsSource="{Binding AllVisibilities}"
-                         SelectedItems="{Binding Visibilities}"
-                         SelectionMode="Multiple,Toggle"
-                         Height="150">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding .}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-
-                <Label Grid.Row="1" Grid.Column="0"
-                       Target="Skip">
-                    Skip:
-                </Label>
-                <NumericUpDown Grid.Row="1" Grid.Column="1"
-                               Name="Skip"
-                               Minimum="0"
-                               Value="{Binding Skip}" />
-            </Grid>
         </StackPanel>
     </DockPanel>
 </Window>

@@ -88,25 +88,26 @@
                 </Button>
             </StackPanel>
 
-            <StackPanel Spacing="5"
-                        VerticalAlignment="Stretch">
+            <ScrollViewer VerticalAlignment="Stretch" Margin="0 10">
+                <StackPanel Spacing="5"
+                            VerticalAlignment="Stretch">
 
-                <Label Target="Files">Files:</Label>
-                <ItemsControl ItemsSource="{Binding FileItems}" Name="Files">
+                    <ItemsControl ItemsSource="{Binding FileItems}" Name="Files">
 
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type vm:ViewModelBase}">
-                            <ContentControl Content="{Binding .}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:ViewModelBase}">
+                                <ContentControl Content="{Binding .}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
 
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </StackPanel>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
 
         </DockPanel>
     </Panel>

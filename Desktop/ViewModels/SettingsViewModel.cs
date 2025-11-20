@@ -32,6 +32,7 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty] private ObservableCollection<Model> _models = new(Enum.GetValues<Model>());
 
     [ObservableProperty] private ObservableCollection<OutputFormat> _outputFormats = new(Enum.GetValues<OutputFormat>());
+    [ObservableProperty] private string _outputLocation = "";
 
     [ObservableProperty] private ConfigService.Configuration _settings;
 
@@ -51,6 +52,7 @@ public partial class SettingsViewModel : ViewModelBase
             LogToFile = _original.LogToFile,
             YouTubeCaptionName = _original.YouTubeCaptionName
         };
+        _outputLocation = _original.OutputLocation;
         _language = CultureInfo.GetCultureInfo(_settings.Language);
     }
 
@@ -73,7 +75,7 @@ public partial class SettingsViewModel : ViewModelBase
 
         if (output.Count != 1) throw new UnreachableException();
 
-        Settings.OutputLocation = output[0].Path.LocalPath;
+        OutputLocation = output[0].Path.LocalPath;
     }
 
     [RelayCommand]
@@ -87,7 +89,7 @@ public partial class SettingsViewModel : ViewModelBase
     {
         _original.DoSplitting = Settings.DoSplitting;
         _original.Language = Settings.Language;
-        _original.OutputLocation = Settings.OutputLocation;
+        _original.OutputLocation = OutputLocation;
         _original.ChunkSize = Settings.ChunkSize;
         _original.Model = Settings.Model;
         _original.OutputFormat = Settings.OutputFormat;

@@ -17,7 +17,6 @@
         <vm:SettingsViewModel />
     </Design.DataContext>
 
-    <!-- //TODO some settings are not dynamically updated  -->
     <Panel Margin="10">
         <ExperimentalAcrylicBorder IsHitTestVisible="False">
             <ExperimentalAcrylicBorder.Material>
@@ -61,7 +60,7 @@
                 <TextBox Grid.Row="0" Grid.Column="1"
                          HorizontalContentAlignment="Stretch"
                          Name="Output"
-                         Text="{Binding Settings.OutputLocation}">
+                         Text="{Binding OutputLocation}">
                     <Interaction.Behaviors>
                         <EventTriggerBehavior EventName="GotFocus">
                             <InvokeCommandAction Command="{Binding SelectOutputLocationCommand}" />
