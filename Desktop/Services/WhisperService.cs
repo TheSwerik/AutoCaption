@@ -20,7 +20,7 @@ public static partial class WhisperService
     private static readonly ILogger FfmpegLogger = new Logger("FFmpeg");
     public static event ProgressEventHandler? OnProgress;
 
-    public static async Task Process(WhisperSettings settings, CancellationToken ct)
+    public static async Task<EmptyResult<WhisperError>> Process(WhisperSettings settings, CancellationToken ct)
     {
         Logger.LogInformation($"Beginning processing of {settings}.");
         var tempPath = $"{settings.OutputLocation.Replace("\"", "")}/temp";
@@ -31,7 +31,7 @@ public static partial class WhisperService
         {
             Logger.LogInformation($"Since {settings.FilePath} is a YouTube link, downloading audio file");
             var path = await YoutubeService.DownloadAudioAsync(youtubeVideoId!, tempPath, ct);
-            if (!path.Success) throw new NotImplementedException("Error not handled");
+            if (!path.Success) return path.Error;
 
             Logger.LogInformation($"Audio downloaded successfully to {path}");
             settings = settings with { FilePath = path.Value };
@@ -50,16 +50,16 @@ public static partial class WhisperService
             Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
             Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
             var result = await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
-            if (!result.Success) throw new NotImplementedException("did not handle error");
+            if (!result.Success) return result.Error;
             Logger.LogInformation($"Processing of {settings.FilePath} completed.");
-            if (!isYoutube) return;
+            if (!isYoutube) return EmptyResult<WhisperError>.SuccessFull;
 
             var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
             var vttOutputFile = $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
             Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
             await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
             Logger.LogInformation("Caption Uploaded");
-            return;
+            return EmptyResult<WhisperError>.SuccessFull;
         }
 
         try
@@ -67,7 +67,7 @@ public static partial class WhisperService
             // split file into 30min segments
             Logger.LogInformation($"Splitting {settings.FilePath} to temp path {tempPath} into {maxDuration} segments");
             var splitResult = await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
-            if (!splitResult.Success) throw new NotImplementedException("did not handle error");
+            if (!splitResult.Success) return splitResult.Error;
             Logger.LogInformation("Splitting completed");
             var ext = Path.GetExtension(settings.FilePath);
 
@@ -84,7 +84,7 @@ public static partial class WhisperService
                     true
                 );
                 var result = await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
-                if (!result.Success) throw new NotImplementedException("did not handle error");
+                if (!result.Success) return result.Error;
                 Logger.LogInformation($"Processing of Segment {i} completed.");
             }
 
@@ -144,6 +144,8 @@ public static partial class WhisperService
         {
             Directory.Delete(tempPath, true);
         }
+
+        return EmptyResult<WhisperError>.SuccessFull;
     }
 
     private static async Task<EmptyResult<WhisperError>> Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset,

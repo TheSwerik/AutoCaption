@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -44,5 +45,14 @@ public class App : Application
 
         // remove each entry found
         foreach (var plugin in dataValidationPluginsToRemove) BindingPlugins.DataValidators.Remove(plugin);
+    }
+
+    public static async Task<TResult> OpenModal<TParentWindow, TResult>(Window modal)
+    {
+        var mainWindow = Windows.First(w => w is TParentWindow);
+        Windows.Add(modal);
+        var response = await modal.ShowDialog<TResult>(mainWindow);
+        Windows.Remove(modal);
+        return response;
     }
 }

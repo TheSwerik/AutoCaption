@@ -76,7 +76,8 @@ public partial class FileItemViewModel : ViewModelBase
             IsInProgress = true;
             var settings = new WhisperSettings(Path, $"\"{OutputLocation}\"", Language, DoSplitting);
             WhisperService.OnProgress += OnProgress;
-            await WhisperService.Process(settings, token);
+            var result = await WhisperService.Process(settings, token);
+            if (!result.Success) throw new NotImplementedException("Error not handled");
             Progress = 100.0;
             IsCompleted = true;
         }

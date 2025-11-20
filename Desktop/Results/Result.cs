@@ -43,24 +43,37 @@ public class Result<TValue> : Result<TValue, Error>
 
 public class Result<TValue, TError> where TError : Error
 {
+    private readonly TValue? _value;
+
     protected Result(TValue value)
     {
-        Value = value;
+        _value = value;
         Success = true;
     }
 
     protected Result(TError error)
     {
+        _value = default;
+        Error = error;
+        Success = false;
+    }
+
+    protected Result(TError error, TValue partialValue)
+    {
+        _value = partialValue;
         Error = error;
         Success = false;
     }
 
     public bool Success { get; }
 
-    public TValue Value
-    {
-        get => Success ? field : throw new InvalidOperationException("The Result was not successful, so there is no Value");
-    } = default!;
+    public TValue Value => Success
+        ? _value!
+        : throw new InvalidOperationException("The Result was not successful, so there is no Value");
+
+    public TValue? PartialValue => Success
+        ? throw new InvalidOperationException("The Result was successful, so there is no PartialValue")
+        : _value;
 
     public TError Error
     {

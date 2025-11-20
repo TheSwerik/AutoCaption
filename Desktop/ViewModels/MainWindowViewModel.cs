@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Desktop.Errors;
 using Desktop.Services;
 using Desktop.Views;
 using Desktop.Views.Modals;
@@ -102,16 +103,42 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     private async Task OpenImportFromYoutube()
     {
-        var mainWindow = App.Windows.First(w => w is MainWindow);
         var dialog = new ImportYoutubeWindow { DataContext = new ImportYoutubeViewModel() };
-        App.Windows.Add(dialog);
-        var response = await dialog.ShowDialog<ImportYoutubeViewModel.Result?>(mainWindow);
-        App.Windows.Remove(dialog);
+        var response = await App.OpenModal<MainWindow, ImportYoutubeViewModel.Result?>(dialog);
 
         if (response is null) return;
 
         var videoFiles = await YoutubeService.GetAllVideosWithoutCustomCaptions(response.Visibilities, response.Skip);
-        if (!videoFiles.Success) throw new NotImplementedException("Error not handled");
+        if (!videoFiles.Success)
+        {
+            switch (videoFiles.Error)
+            {
+                case QuotaExceededError:
+                    var confirmation = new ConfirmationWindow()
+                    {
+                        DataContext = new ConfirmationViewModel("Quota exceeded",
+                            $"The daily Quota for YouTube has been exceeded. You can add all {videoFiles.PartialValue.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {videoFiles.PartialValue.Length} Videos to the session?")
+                    };
+                    var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
+                    if (confirmationResponse is not true) return;
+
+                    foreach (var file in videoFiles.PartialValue) Files.Add(file);
+                    RegenerateFileViews();
+                    SaveSession();
+                    return;
+                case NoVisibilitySelectedError:
+                    var errorDialog = new ErrorWindow() { DataContext = new ErrorViewModel("You have not selected any Visbility, so no Videos are found.") };
+                    await App.OpenModal<MainWindow, bool?>(errorDialog);
+                    return;
+                case AuthorizationError e:
+                    var authErrorDialog = new ErrorWindow() { DataContext = new ErrorViewModel($"There was an Authorization Error:\n{e.Message}") };
+                    await App.OpenModal<MainWindow, bool?>(authErrorDialog);
+                    return;
+                default:
+                    throw new NotImplementedException("Error not handled");
+            }
+        }
+
         foreach (var file in videoFiles.Value) Files.Add(file);
         RegenerateFileViews();
         SaveSession();

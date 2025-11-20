@@ -1,0 +1,27 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:Desktop.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="250" d:DesignHeight="150"
+        x:Class="Desktop.Views.Modals.ErrorWindow"
+        x:DataType="viewModels:ErrorViewModel"
+        TransparencyLevelHint="AcrylicBlur" Background="Transparent"
+        WindowStartupLocation="CenterScreen"
+        HorizontalAlignment="Stretch"
+        MinWidth="150" MaxWidth="450"
+        MinHeight="150" MaxHeight="450"
+        Width="450" Height="200"
+        Title="Error">
+    <Design.DataContext>
+        <viewModels:ErrorViewModel />
+    </Design.DataContext>
+
+    <DockPanel LastChildFill="True" Margin="10">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom" HorizontalAlignment="Right" Spacing="5">
+            <Button Command="{Binding OkCommand}">Ok</Button>
+        </StackPanel>
+
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" />
+    </DockPanel>
+</Window>

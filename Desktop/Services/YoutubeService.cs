@@ -12,6 +12,7 @@ using Desktop.Extensions;
 using Desktop.Results;
 using Desktop.ViewModels;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
@@ -56,7 +57,7 @@ public static class YoutubeService
         int skip = 0
     )
     {
-        if (visibilities.Length == 0) return new YouTubeServiceError("At least one visibility has to be chosen");
+        if (visibilities.Length == 0) return new NoVisibilitySelectedError();
         var allVideoIds = await GetAllVideoIdsAsync(visibilities);
         if (!allVideoIds.Success) return allVideoIds.Error;
         var result = await allVideoIds.Value.Skip(skip).SelectManyAsync(async id =>
@@ -111,7 +112,7 @@ public static class YoutubeService
         proc.OutputDataReceived -= YtdlpInfoLogger;
         proc.OutputDataReceived -= FilePathParser;
 
-        if (proc.ExitCode != 0) return new YtdlpError(proc.ExitCode); //TODO show errors in frontend
+        if (proc.ExitCode != 0) return new YtdlpError(proc.ExitCode);
 
         Logger.LogInformation($"Downloaded Audio of video {id} to {outputPath}: {fileName}");
         return fileName;
@@ -155,11 +156,25 @@ public static class YoutubeService
         Logger.LogInformation("Finding own YouTube Channel including Uploads Playlist (1qu)");
         var request = YouTubeService.Channels.List("contentDetails"); // 1 quota unit
         request.Mine = true;
-        var response = await request.ExecuteAsync();
+        ChannelListResponse? response;
+        try
+        {
+            response = await request.ExecuteAsync();
+        }
+        catch (TokenResponseException e)
+        {
+            return new AuthorizationError(e.Message);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
         Logger.LogInformation($"Found {response.Items.Count} Channels. Picking the first one: {response.Items[0].Id}");
 
         var uploadsPlaylistId = response.Items[0].ContentDetails.RelatedPlaylists.Uploads;
-        if (uploadsPlaylistId is null) return new YouTubeServiceError("Upload Playlist not found"); //TODO
+        if (uploadsPlaylistId is null) return new YouTubeServiceError("Upload Playlist not found");
         Logger.LogInformation($"Found Upload-Playlist: {uploadsPlaylistId}");
 
         // get VideoIDs from Playlist
@@ -274,7 +289,6 @@ public static class YoutubeService
         await using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
         var insert = YouTubeService.Captions.Insert(caption, "snippet", fs, "application/octet-stream");
         await insert.UploadAsync(ct);
-        Logger.LogError("WHAT DID THE NAME DO?????");
         Logger.LogInformation($"Successfully uploaded Caption (400qu): {videoId},  language: {language}, path: {path}");
     }
 }

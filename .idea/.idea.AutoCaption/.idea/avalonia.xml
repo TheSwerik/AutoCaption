@@ -8,6 +8,7 @@
         <entry key="Desktop/Views/FileItemView.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/MainWindow.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/Modals/ConfirmationWindow.axaml" value="Desktop/Desktop.csproj" />
+        <entry key="Desktop/Views/Modals/ErrorWindow.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/Modals/FileItemSettingsWindow.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/Modals/ImportYoutubeWindow.axaml" value="Desktop/Desktop.csproj" />
         <entry key="Desktop/Views/Modals/SettingsWindow.axaml" value="Desktop/Desktop.csproj" />

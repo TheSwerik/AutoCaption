@@ -64,6 +64,10 @@
             <DependentUpon>ImportYoutubeWindow.axaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
+        <Compile Update="Views\Modals\ErrorWindow.axaml.cs">
+            <DependentUpon>ErrorWindow.axaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
