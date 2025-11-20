@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Desktop.Errors;
+using Desktop.Results;
 using MediaToolkit;
 using MediaToolkit.Model;
 
@@ -29,8 +31,10 @@ public static partial class WhisperService
         {
             Logger.LogInformation($"Since {settings.FilePath} is a YouTube link, downloading audio file");
             var path = await YoutubeService.DownloadAudioAsync(youtubeVideoId!, tempPath, ct);
+            if (!path.Success) throw new NotImplementedException("Error not handled");
+
             Logger.LogInformation($"Audio downloaded successfully to {path}");
-            settings = settings with { FilePath = path };
+            settings = settings with { FilePath = path.Value };
         }
 
         var maxDuration = ConfigService.Config.ChunkSize;
@@ -45,7 +49,8 @@ public static partial class WhisperService
         {
             Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
             Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
-            await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
+            var result = await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
+            if (!result.Success) throw new NotImplementedException("did not handle error");
             Logger.LogInformation($"Processing of {settings.FilePath} completed.");
             if (!isYoutube) return;
 
@@ -61,7 +66,8 @@ public static partial class WhisperService
         {
             // split file into 30min segments
             Logger.LogInformation($"Splitting {settings.FilePath} to temp path {tempPath} into {maxDuration} segments");
-            await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
+            var splitResult = await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
+            if (!splitResult.Success) throw new NotImplementedException("did not handle error");
             Logger.LogInformation("Splitting completed");
             var ext = Path.GetExtension(settings.FilePath);
 
@@ -77,7 +83,8 @@ public static partial class WhisperService
                     settings.Language,
                     true
                 );
-                await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
+                var result = await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
+                if (!result.Success) throw new NotImplementedException("did not handle error");
                 Logger.LogInformation($"Processing of Segment {i} completed.");
             }
 
@@ -139,7 +146,7 @@ public static partial class WhisperService
         }
     }
 
-    private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset,
+    private static async Task<EmptyResult<WhisperError>> Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset,
         CancellationToken ct)
     {
         List<string> arguments =
@@ -181,12 +188,12 @@ public static partial class WhisperService
         proc.BeginErrorReadLine();
 
         await proc.WaitForExitAsync(ct);
-        if (proc.ExitCode != 0) throw new Exception("Python Exitcode: " + proc.ExitCode);
+        if (proc.ExitCode != 0) return new WhisperError(proc.ExitCode);
 
         proc.OutputDataReceived -= ProgressHandler;
         proc.OutputDataReceived -= WhisperInfoLogger;
         proc.ErrorDataReceived -= WhisperErrorLogger;
-        return;
+        return EmptyResult<WhisperError>.SuccessFull;
 
         void ProgressHandler(object _, DataReceivedEventArgs args)
         {
@@ -223,7 +230,7 @@ public static partial class WhisperService
         OnProgress?.Invoke(null, new ProgressEventArgs(progress));
     }
 
-    private static async Task SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
+    private static async Task<EmptyResult<FfmpegError>> SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
     {
         Directory.CreateDirectory(tempPath);
 
@@ -266,7 +273,9 @@ public static partial class WhisperService
         proc.ErrorDataReceived -= FfmpegInfoLogger;
         proc.OutputDataReceived -= FfmpegInfoLogger;
 
-        if (proc.ExitCode != 0) throw new Exception("FFmpeg Exitcode: " + proc.ExitCode);
+        return proc.ExitCode != 0
+            ? new FfmpegError(proc.ExitCode)
+            : EmptyResult<FfmpegError>.SuccessFull;
     }
 
     private static async Task<bool> IsAudio(string path, CancellationToken ct)

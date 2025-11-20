@@ -111,7 +111,8 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         if (response is null) return;
 
         var videoFiles = await YoutubeService.GetAllVideosWithoutCustomCaptions(response.Visibilities, response.Skip);
-        foreach (var file in videoFiles) Files.Add(file);
+        if (!videoFiles.Success) throw new NotImplementedException("Error not handled");
+        foreach (var file in videoFiles.Value) Files.Add(file);
         RegenerateFileViews();
         SaveSession();
     }
