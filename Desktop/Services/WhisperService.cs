@@ -138,6 +138,7 @@ public static partial class WhisperService
                 }
                 catch (QuotaExceededException e)
                 {
+                    Logger.LogError($"Quota Limit was reached when trying to uplaod caption {vttOutputFile}");
                     throw new QuotaExceededException<string>(e, vttOutputFile);
                 }
             }

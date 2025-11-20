@@ -22,6 +22,7 @@ namespace Desktop.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
+    private readonly ILogger _logger = new Logger<MainWindowViewModel>();
 #if DEBUG
     private static readonly string SessionPath = Path.Combine("./AutoCaption", "session.json");
 #else
@@ -118,35 +119,44 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         {
             if (e.PartialValue is null || e.PartialValue.Value.Length == 0)
             {
+                _logger.LogError("Import from YouTube failed. Quota exceeded before any video was parsed.");
                 var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel("The daily Quota for YouTube has been exceeded.") };
                 await App.OpenModal<MainWindow, bool?>(errorWindow);
                 return;
             }
 
+            _logger.LogError($"Import from YouTube failed. Quota exceeded. Found {e.PartialValue.Value.Length} videos.");
             var confirmation = new ConfirmationWindow
             {
                 DataContext = new ConfirmationViewModel("Quota exceeded",
                     $"The daily Quota for YouTube has been exceeded.\nYou can add all {e.PartialValue.Value.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {e.PartialValue.Value.Length} Videos to the session?")
             };
             var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
-            if (confirmationResponse is not true) return;
+            if (confirmationResponse is not true)
+            {
+                _logger.LogError($"{e.PartialValue.Value.Length} videos were NOT added to the session.");
+                return;
+            }
 
             videoFiles = e.PartialValue.Value;
         }
         catch (NoVisibilitySelectedException)
         {
+            _logger.LogError("Import from YouTube failed due to no selected Visibility.");
             var errorDialog = new ErrorWindow { DataContext = new ErrorViewModel("You have not selected any Visbility, so no Videos are found.") };
             await App.OpenModal<MainWindow, bool?>(errorDialog);
             return;
         }
         catch (AuthorizationException e)
         {
+            _logger.LogError("Import from YouTube failed due to an authorization failure.");
             var authErrorDialog = new ErrorWindow { DataContext = new ErrorViewModel($"There was an Authorization Error:\n{e.Message}") };
             await App.OpenModal<MainWindow, bool?>(authErrorDialog);
             return;
         }
         catch (YouTubeServiceException e)
         {
+            _logger.LogError($"Import from YouTube failed due to a generic error: {e.Message}\n{e.StackTrace}");
             var genericErrorDialog = new ErrorWindow { DataContext = new ErrorViewModel($"There was an Error with YouTube:\n{e.Message}") };
             await App.OpenModal<MainWindow, bool?>(genericErrorDialog);
             return;
