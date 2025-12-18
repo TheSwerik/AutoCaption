@@ -23,6 +23,7 @@ public static class YoutubeService
 {
     private const string YtKey = "YouTube";
     private const string QuotaText = "The request cannot be completed because you have exceeded your";
+    private const string ConflictText = "HttpStatusCode is Conflict.";
     private static readonly ILogger Logger = new Logger(nameof(YoutubeService));
     private static readonly ILogger YtdlpLogger = new Logger("yt-dlp");
 
@@ -355,14 +356,22 @@ public static class YoutubeService
         }
         catch (TokenResponseException e)
         {
+            Logger.LogError($"Authorization Error: {e.Message}");
             throw new AuthorizationException(e.Message, e);
         }
         catch (GoogleApiException e) when (e.Message.Contains(QuotaText))
         {
+            Logger.LogError($"Quota Limit was reached when trying to upload caption {path}");
             throw new QuotaExceededException<string>(e, Path.GetFullPath(path));
+        }
+        catch (GoogleApiException e) when (e.Message.Contains(ConflictText))
+        {
+            Logger.LogError($"Caption already exists for {language}. Generated Caption file at {Path.GetFullPath(path)}");
+            throw new CaptionAlreadyExistsException<string>(e, Path.GetFullPath(path));
         }
         catch (Exception e) when (e is not null && e is not YouTubeServiceException)
         {
+            Logger.LogError($"Uncaught Exception: {e.GetType()} {e.Message}\n{e.StackTrace}");
             if (e is not null) throw new YouTubeServiceException(e.Message, e);
             throw;
         }

@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Desktop.Exceptions.WhisperService;
-using Desktop.Exceptions.YouTubeService;
 using MediaToolkit;
 using MediaToolkit.Model;
 
@@ -130,17 +129,9 @@ public static partial class WhisperService
                 var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                 if (ConfigService.Config.OutputFormat == OutputFormat.ALL) captionExtension = "vtt";
                 var vttOutputFile = $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
-                try
-                {
-                    Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
-                    await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
-                    Logger.LogInformation("Caption Uploaded");
-                }
-                catch (QuotaExceededException e)
-                {
-                    Logger.LogError($"Quota Limit was reached when trying to uplaod caption {vttOutputFile}");
-                    throw new QuotaExceededException<string>(e, vttOutputFile);
-                }
+                Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
+                await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
+                Logger.LogInformation("Caption Uploaded");
             }
         }
         finally

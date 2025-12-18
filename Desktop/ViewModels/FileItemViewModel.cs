@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace Desktop.ViewModels;
 public partial class FileItemViewModel : ViewModelBase
 {
     private readonly ILogger _logger = new Logger<FileItemViewModel>();
+    [ObservableProperty] private bool _captionUploaded;
     [ObservableProperty] private bool _doSplitting;
     [ObservableProperty] private bool _isCompleted;
     [ObservableProperty] private bool _isInProgress;
@@ -23,7 +25,6 @@ public partial class FileItemViewModel : ViewModelBase
     [ObservableProperty] private string _outputLocation;
     [ObservableProperty] private string _path = "";
     [ObservableProperty] private double _progress;
-    [ObservableProperty] private bool _captionUploaded;
 
     public FileItemViewModel()
     {
@@ -127,6 +128,37 @@ public partial class FileItemViewModel : ViewModelBase
             CaptionUploaded = false;
             IsCompleted = true;
             Progress = 100.0;
+        }
+        catch (CaptionAlreadyExistsException<string> e)
+        {
+            _logger.LogError($"Caption for {Language} already exists.");
+            if (!ConfigService.Config.GenerateWithoutUploading)
+            {
+                var errorWindow = new ErrorWindow
+                {
+                    DataContext = new ErrorViewModel(
+                        $"Caption for {Language} already exists. Could not upload the Caption to YouTube.\nThe generated Caption-File can be found at\n{e.PartialValue}")
+                };
+                await App.OpenModal<MainWindow, bool?>(errorWindow);
+            }
+
+            CaptionUploaded = false;
+            IsCompleted = true;
+            Progress = 100.0;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Uncaught Exception.");
+            var errorWindow = new ErrorWindow
+            {
+                DataContext = new ErrorViewModel(
+                    $"Uncaught Exception:\n{e.GetType()}: {e.Message}\n{e.StackTrace}")
+            };
+            await App.OpenModal<MainWindow, bool?>(errorWindow);
+
+            CaptionUploaded = false;
+            IsCompleted = false;
+            Progress = 0;
         }
         finally
         {
