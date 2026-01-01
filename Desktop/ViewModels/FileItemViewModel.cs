@@ -94,22 +94,34 @@ public partial class FileItemViewModel : ViewModelBase
         catch (YtdlpException e)
         {
             _logger.LogError($"yt-dlp had an error for {Path}: {e.Message}");
-            var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not download the video from YouTube:\n{e.Message}") };
-            await App.OpenModal<MainWindow, bool?>(errorWindow);
+            if (!ConfigService.Config.ContinueOnError)
+            {
+                var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not download the video from YouTube:\n{e.Message}") };
+                await App.OpenModal<MainWindow, bool?>(errorWindow);
+            }
+
             Progress = 0;
         }
         catch (FfmpegException e)
         {
             _logger.LogError($"ffmpeg had an error for {Path}: {e.Message}");
-            var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not split the file into segments:\n{e.Message}") };
-            await App.OpenModal<MainWindow, bool?>(errorWindow);
+            if (!ConfigService.Config.ContinueOnError)
+            {
+                var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not split the file into segments:\n{e.Message}") };
+                await App.OpenModal<MainWindow, bool?>(errorWindow);
+            }
+
             Progress = 0;
         }
         catch (WhisperException e)
         {
             _logger.LogError($"whisper had an error for {Path}: {e.Message}");
-            var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not generate captions:\n{e.Message}") };
-            await App.OpenModal<MainWindow, bool?>(errorWindow);
+            if (!ConfigService.Config.ContinueOnError)
+            {
+                var errorWindow = new ErrorWindow { DataContext = new ErrorViewModel($"Could not generate captions:\n{e.Message}") };
+                await App.OpenModal<MainWindow, bool?>(errorWindow);
+            }
+
             Progress = 0;
         }
         catch (QuotaExceededException<string> e)
@@ -149,12 +161,15 @@ public partial class FileItemViewModel : ViewModelBase
         catch (Exception e)
         {
             _logger.LogError("Uncaught Exception.");
-            var errorWindow = new ErrorWindow
+            if (!ConfigService.Config.ContinueOnError)
             {
-                DataContext = new ErrorViewModel(
-                    $"Uncaught Exception:\n{e.GetType()}: {e.Message}\n{e.StackTrace}")
-            };
-            await App.OpenModal<MainWindow, bool?>(errorWindow);
+                var errorWindow = new ErrorWindow
+                {
+                    DataContext = new ErrorViewModel(
+                        $"Uncaught Exception:\n{e.GetType()}: {e.Message}\n{e.StackTrace}")
+                };
+                await App.OpenModal<MainWindow, bool?>(errorWindow);
+            }
 
             CaptionUploaded = false;
             IsCompleted = false;

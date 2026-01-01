@@ -4,14 +4,14 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        d:DesignWidth="800" d:DesignHeight="450"
+        d:DesignWidth="800" d:DesignHeight="650"
         x:Class="Desktop.Views.Modals.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Icon="/Assets/avalonia-logo.ico"
         TransparencyLevelHint="AcrylicBlur" Background="Transparent"
         WindowStartupLocation="CenterScreen"
         HorizontalAlignment="Stretch"
-        Width="750" Height="600"
+        Width="750" Height="650"
         Title="Settings">
     <Design.DataContext>
         <vm:SettingsViewModel />
@@ -49,7 +49,7 @@
                 </Button>
             </StackPanel>
 
-            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*"
                   ColumnDefinitions="2*,*"
                   VerticalAlignment="Stretch">
 
@@ -204,6 +204,15 @@
                           HorizontalAlignment="Center"
                           Name="GenerateWithoutUploading"
                           IsChecked="{Binding Settings.GenerateWithoutUploading}" />
+
+                <Label Grid.Row="11" Grid.Column="0"
+                       Target="ContinueOnError">
+                    Continue Generating even if an error occurs?
+                </Label>
+                <CheckBox Grid.Row="11" Grid.Column="1"
+                          HorizontalAlignment="Center"
+                          Name="ContinueOnError"
+                          IsChecked="{Binding Settings.ContinueOnError}" />
 
             </Grid>
         </DockPanel>

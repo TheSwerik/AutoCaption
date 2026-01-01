@@ -37,7 +37,8 @@ public static class ConfigService
             Language = "en",
             OutputLocation = "./",
             YouTubeCaptionName = "",
-            GenerateWithoutUploading = true
+            GenerateWithoutUploading = true,
+            ContinueOnError = false
         };
         Save();
     }
@@ -227,6 +228,16 @@ public static class ConfigService
         } = "";
 
         public bool GenerateWithoutUploading
+        {
+            get;
+            set
+            {
+                field = value;
+                Save();
+            }
+        } = true;
+
+        public bool ContinueOnError
         {
             get;
             set

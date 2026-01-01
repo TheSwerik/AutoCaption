@@ -51,7 +51,8 @@ public partial class SettingsViewModel : ViewModelBase
             LogLevel = _original.LogLevel,
             LogToFile = _original.LogToFile,
             YouTubeCaptionName = _original.YouTubeCaptionName,
-            GenerateWithoutUploading = _original.GenerateWithoutUploading
+            GenerateWithoutUploading = _original.GenerateWithoutUploading,
+            ContinueOnError = _original.ContinueOnError
         };
         _outputLocation = _original.OutputLocation;
         _language = CultureInfo.GetCultureInfo(_settings.Language);
@@ -99,6 +100,7 @@ public partial class SettingsViewModel : ViewModelBase
         _original.LogToFile = Settings.LogToFile;
         _original.YouTubeCaptionName = Settings.YouTubeCaptionName;
         _original.GenerateWithoutUploading = Settings.GenerateWithoutUploading;
+        _original.ContinueOnError = Settings.ContinueOnError;
 
         var window = App.Windows.First(w => w is SettingsWindow);
         window.Close(true);
