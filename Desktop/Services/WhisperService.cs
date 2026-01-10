@@ -52,7 +52,8 @@ public static partial class WhisperService
             if (!isYoutube) return;
 
             var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
-            var vttOutputFile = $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+            var vttOutputFile =
+                $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
             Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
             await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
             Logger.LogInformation("Caption Uploaded");
@@ -97,7 +98,7 @@ public static partial class WhisperService
                         var segmentFiles = Enumerable.Range(0, segments)
                             .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
                         var outputFile =
-                            $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                            $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
                         await Combine(maxDuration, outputFile, extension, segmentFiles);
                         Logger.LogInformation($"{extension} segments combined: {outputFile}");
                     }
@@ -117,7 +118,8 @@ public static partial class WhisperService
                     var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                     var segmentFiles = Enumerable.Range(0, segments)
                         .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
-                    var outputFile = $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                    var outputFile =
+                        $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
                     await Combine(maxDuration, outputFile, ConfigService.Config.OutputFormat, segmentFiles);
                     Logger.LogInformation($"{ConfigService.Config.OutputFormat} segments combined: {outputFile}");
                     break;
@@ -128,7 +130,8 @@ public static partial class WhisperService
             {
                 var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                 if (ConfigService.Config.OutputFormat == OutputFormat.ALL) captionExtension = "vtt";
-                var vttOutputFile = $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{captionExtension}";
+                var vttOutputFile =
+                    $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
                 Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
                 await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
                 Logger.LogInformation("Caption Uploaded");
