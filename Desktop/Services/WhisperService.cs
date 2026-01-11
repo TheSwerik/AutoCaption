@@ -51,11 +51,11 @@ public static partial class WhisperService
                 Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
                 Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
                 await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
-                foreach (var file in Directory.GetFiles(settings.OutputLocation))
+                foreach (var file in Directory.GetFiles(settings.OutputLocation.Replace("\"", "")))
                 {
                     // add language to filename
                     var extension = Path.GetExtension(file);
-                    var filename = Path.ChangeExtension(file, $".{settings.Language}.{extension}");
+                    var filename = Path.ChangeExtension(file, $".{settings.Language}{extension}");
                     File.Move(file, filename);
                 }
 
