@@ -145,12 +145,13 @@ public static partial class WhisperService
 
     private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset, CancellationToken ct)
     {
+        var filename = Path.GetFileNameWithoutExtension(settings.FilePath);
         List<string> arguments =
         [
             "whisper",
             $"\"{settings.FilePath}\"",
             $"--device {(ConfigService.Config.UseGpu ? "cuda" : "cpu")}",
-            $"-o {settings.OutputLocation}",
+            $"-o {settings.OutputLocation}/{filename}.{settings.Language}",
             $"--output_format {ConfigService.Config.OutputFormat.ToString().ToLowerInvariant()}",
             $"--model {ConfigService.Config.Model.ToString().ToLowerInvariant()}",
             $"--language {settings.Language}"
