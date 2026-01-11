@@ -43,24 +43,34 @@ public static partial class WhisperService
             engine.GetMetadata(inputFile);
         }
 
-        if (!settings.DoSplitting || inputFile.Metadata.Duration < maxDuration)
-        {
-            Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
-            Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
-            await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
-            Logger.LogInformation($"Processing of {settings.FilePath} completed.");
-            if (!isYoutube) return;
-
-            var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
-            var vttOutputFile =
-                $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
-            Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
-            await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
-            Logger.LogInformation("Caption Uploaded");
-        }
-
         try
         {
+            if (!settings.DoSplitting || inputFile.Metadata.Duration < maxDuration)
+            {
+                // process without splitting
+                Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
+                Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
+                await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
+                foreach (var file in Directory.GetFiles(settings.OutputLocation))
+                {
+                    // add language to filename
+                    var extension = Path.GetExtension(file);
+                    var filename = Path.ChangeExtension(file, $".{settings.Language}.{extension}");
+                    File.Move(file, filename);
+                }
+
+                Logger.LogInformation($"Processing of {settings.FilePath} completed.");
+                if (!isYoutube) return;
+
+                var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
+                var vttOutputFile =
+                    $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
+                Logger.LogInformation($"Uploading Caption To YouTube: VideoId={youtubeVideoId}, Language={settings.Language}, File={vttOutputFile}");
+                await YoutubeService.UploadCaptionAsync(youtubeVideoId!, settings.Language, vttOutputFile, ct);
+                Logger.LogInformation("Caption Uploaded");
+                return;
+            }
+
             // split file into 30min segments
             Logger.LogInformation($"Splitting {settings.FilePath} to temp path {tempPath} into {maxDuration} segments");
             await SplitFile(settings.FilePath, tempPath, maxDuration, ct);
@@ -145,13 +155,12 @@ public static partial class WhisperService
 
     private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset, CancellationToken ct)
     {
-        var filename = Path.GetFileNameWithoutExtension(settings.FilePath);
         List<string> arguments =
         [
             "whisper",
             $"\"{settings.FilePath}\"",
             $"--device {(ConfigService.Config.UseGpu ? "cuda" : "cpu")}",
-            $"-o {settings.OutputLocation}/{filename}.{settings.Language}",
+            $"-o {settings.OutputLocation}",
             $"--output_format {ConfigService.Config.OutputFormat.ToString().ToLowerInvariant()}",
             $"--model {ConfigService.Config.Model.ToString().ToLowerInvariant()}",
             $"--language {settings.Language}"
@@ -199,6 +208,7 @@ public static partial class WhisperService
         proc.OutputDataReceived -= ProgressHandler;
         proc.OutputDataReceived -= WhisperInfoLogger;
         proc.ErrorDataReceived -= WhisperErrorLogger;
+
         return;
 
         void ProgressHandler(object _, DataReceivedEventArgs args)
