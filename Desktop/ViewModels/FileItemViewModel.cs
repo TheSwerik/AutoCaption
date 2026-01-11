@@ -160,7 +160,7 @@ public partial class FileItemViewModel : ViewModelBase
         }
         catch (Exception e)
         {
-            _logger.LogError("Uncaught Exception.");
+            _logger.LogError($"Uncaught Exception: {e.Message}\n{e.StackTrace}");
             if (!ConfigService.Config.ContinueOnError)
             {
                 var errorWindow = new ErrorWindow
