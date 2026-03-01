@@ -89,7 +89,8 @@ public static partial class WhisperService
                     $"\"{tempPath}/segment-{i}{ext}\"",
                     $"\"{tempPath}/\"",
                     settings.Language,
-                    true
+                    true,
+                    settings.IsTranslate
                 );
                 await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
                 Logger.LogInformation($"Processing of Segment {i} completed.");
@@ -109,8 +110,9 @@ public static partial class WhisperService
                         var captionExtension = extension.ToString().ToLowerInvariant();
                         var segmentFiles = Enumerable.Range(0, segments)
                             .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
+                        var outputLanguage = settings.IsTranslate ? "en" : settings.Language;
                         var outputFile =
-                            $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
+                            $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{outputLanguage}.{captionExtension}";
                         await Combine(maxDuration, outputFile, extension, segmentFiles);
                         Logger.LogInformation($"{extension} segments combined: {outputFile}");
                     }
@@ -130,8 +132,9 @@ public static partial class WhisperService
                     var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                     var segmentFiles = Enumerable.Range(0, segments)
                         .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
+                    var outputLanguage = settings.IsTranslate ? "en" : settings.Language;
                     var outputFile =
-                        $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{settings.Language}.{captionExtension}";
+                        $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{outputLanguage}.{captionExtension}";
                     await Combine(maxDuration, outputFile, ConfigService.Config.OutputFormat, segmentFiles);
                     Logger.LogInformation($"{ConfigService.Config.OutputFormat} segments combined: {outputFile}");
                     break;
@@ -157,6 +160,7 @@ public static partial class WhisperService
 
     private static async Task Process(WhisperSettings settings, TimeSpan totalDuration, TimeSpan segmentOffset, CancellationToken ct)
     {
+        var model = settings.IsTranslate ? "medium" : ConfigService.Config.Model.ToString().ToLowerInvariant();
         List<string> arguments =
         [
             "whisper",
@@ -164,8 +168,9 @@ public static partial class WhisperService
             $"--device {(ConfigService.Config.UseGpu ? "cuda" : "cpu")}",
             $"-o {settings.OutputLocation}",
             $"--output_format {ConfigService.Config.OutputFormat.ToString().ToLowerInvariant()}",
-            $"--model {ConfigService.Config.Model.ToString().ToLowerInvariant()}",
-            $"--language {settings.Language}"
+            $"--model {model}",
+            $"--language {settings.Language}",
+            settings.IsTranslate ? "--task translate" : ""
         ];
 
         var info = new ProcessStartInfo
@@ -404,7 +409,7 @@ public static partial class WhisperService
     private static partial Regex TsvTimestampRegex();
 }
 
-public record WhisperSettings(string FilePath, string OutputLocation, string Language, bool DoSplitting);
+public record WhisperSettings(string FilePath, string OutputLocation, string Language, bool DoSplitting, bool IsTranslate);
 
 public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
 

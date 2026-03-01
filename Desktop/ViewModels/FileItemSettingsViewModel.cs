@@ -44,7 +44,8 @@ public partial class FileItemSettingsViewModel : ViewModelBase
             IsCompleted = file.IsCompleted,
             DoSplitting = file.DoSplitting,
             Language = file.Language,
-            OutputLocation = file.OutputLocation
+            OutputLocation = file.OutputLocation,
+            IsTranslateTask = file.IsTranslateTask
         };
         _language = CultureInfo.GetCultureInfo(file.Language);
     }
@@ -84,6 +85,7 @@ public partial class FileItemSettingsViewModel : ViewModelBase
         _original.DoSplitting = File.DoSplitting;
         _original.Language = File.Language;
         _original.OutputLocation = File.OutputLocation.Replace('\\', '/');
+        _original.IsTranslateTask = File.IsTranslateTask;
 
         var window = App.Windows.First(w => w is FileItemSettingsWindow);
         window.Close(true);

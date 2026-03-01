@@ -21,6 +21,7 @@ public partial class FileItemViewModel : ViewModelBase
     [ObservableProperty] private bool _doSplitting;
     [ObservableProperty] private bool _isCompleted;
     [ObservableProperty] private bool _isInProgress;
+    [ObservableProperty] private bool _isTranslateTask;
     [ObservableProperty] private string _language;
     [ObservableProperty] private string _outputLocation;
     [ObservableProperty] private string _path = "";
@@ -28,8 +29,8 @@ public partial class FileItemViewModel : ViewModelBase
 
     public FileItemViewModel()
     {
-        _language = "";
-        _outputLocation = "";
+        Language = "";
+        OutputLocation = "";
     }
 
     public FileItemViewModel(string path)
@@ -79,7 +80,7 @@ public partial class FileItemViewModel : ViewModelBase
         try
         {
             IsInProgress = true;
-            var settings = new WhisperSettings(Path, $"\"{OutputLocation}\"", Language, DoSplitting);
+            var settings = new WhisperSettings(Path, $"\"{OutputLocation}\"", Language, DoSplitting, IsTranslateTask);
             WhisperService.OnProgress += OnProgress;
             await WhisperService.Process(settings, token);
             Progress = 100.0;

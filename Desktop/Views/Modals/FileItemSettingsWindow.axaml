@@ -49,7 +49,7 @@
                 </Button>
             </StackPanel>
 
-            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,*"
+            <Grid RowSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*"
                   ColumnDefinitions="*,*"
                   VerticalAlignment="Stretch">
 
@@ -95,10 +95,18 @@
                 </ComboBox>
 
                 <Label Grid.Row="3" Grid.Column="0"
+                       Target="IsTranslateTask">
+                    Translate to english?
+                </Label>
+                <CheckBox Grid.Row="3" Grid.Column="1"
+                          Name="IsTranslateTask"
+                          IsChecked="{Binding File.IsTranslateTask}" />
+
+                <Label Grid.Row="4" Grid.Column="0"
                        Target="Splitting">
                     Splitting:
                 </Label>
-                <CheckBox Grid.Row="3" Grid.Column="1"
+                <CheckBox Grid.Row="4" Grid.Column="1"
                           Name="Splitting"
                           IsChecked="{Binding File.DoSplitting}" />
 
