@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -200,9 +201,25 @@ public partial class FileItemViewModel : ViewModelBase
         else
             System.Diagnostics.Process.Start(new ProcessStartInfo
             {
-                FileName = "explorer.exe",
-                Arguments = $"/select,\"{Path}\"",
+                FileName = GetRevealCommand(),
+                Arguments = GetRevealArguments(Path),
                 UseShellExecute = true
             });
+    }
+
+    private static string GetRevealCommand()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) return "explorer.exe";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) return "open";
+        return "xdg-open";
+    }
+
+    private static string GetRevealArguments(string path)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return $"/select,\"{path}\"";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return $"-R \"{path}\"";
+        return $"\"{System.IO.Path.GetDirectoryName(path)}\"";
     }
 }

@@ -23,11 +23,16 @@ internal sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
-#if DEBUG
-        InstallWhisper(false);
-        InstallFFmpeg(false);
-        InstallYtDlp(false);
-#endif
+        ConfigService.Init(args);
+        try
+        {
+            EnvironmentService.EnsureVirtualEnvAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Environment setup failed: {ex.Message}");
+        }
+
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
     }
@@ -114,7 +119,7 @@ internal sealed class Program
 
         var info = new ProcessStartInfo
         {
-            FileName = ConfigService.Config.PythonLocation,
+            FileName = ConfigService.Config.PythonExecutable,
             Arguments = $"-m {string.Join(' ', arguments)}",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -144,7 +149,7 @@ internal sealed class Program
 
         info = new ProcessStartInfo
         {
-            FileName = ConfigService.Config.PythonLocation,
+            FileName = ConfigService.Config.PythonExecutable,
             Arguments = $"-m {string.Join(' ', arguments)}",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -177,7 +182,7 @@ internal sealed class Program
 
         info = new ProcessStartInfo
         {
-            FileName = ConfigService.Config.PythonLocation,
+            FileName = ConfigService.Config.PythonExecutable,
             Arguments = $"-m {string.Join(' ', arguments)}",
             RedirectStandardOutput = true,
             RedirectStandardError = true,

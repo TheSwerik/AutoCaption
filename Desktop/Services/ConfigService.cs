@@ -246,3 +246,23 @@ public static class ConfigService
         }
     }
 }
+
+public enum OutputFormat
+{
+    VTT,
+    JSON,
+    TXT,
+    SRT,
+    TSV,
+    ALL
+}
+
+public enum Model
+{
+    Tiny,
+    Base,
+    Small,
+    Medium,
+    Large,
+    Turbo
+}

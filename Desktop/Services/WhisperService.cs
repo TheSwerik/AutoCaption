@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -183,6 +184,10 @@ public static partial class WhisperService
             CreateNoWindow = true
         };
 
+        var ffmpegLocation = ConfigService.Config.FfmpegLocation;
+        var ffmpegDirectory = File.Exists(ffmpegLocation) ? Path.GetDirectoryName(ffmpegLocation) : ffmpegLocation;
+        if (!string.IsNullOrEmpty(ffmpegDirectory)) info.Environment["PATH"] = $"{ffmpegDirectory}{Path.PathSeparator}{info.Environment["PATH"]}";
+
         Logger.LogInformation(info.FileName + " " + info.Arguments);
         using var proc = new Process();
         proc.StartInfo = info;
@@ -190,6 +195,11 @@ public static partial class WhisperService
         proc.OutputDataReceived += ProgressHandler;
         proc.OutputDataReceived += WhisperInfoLogger;
         proc.ErrorDataReceived += WhisperErrorLogger;
+
+        void ProgressHandler(object _, DataReceivedEventArgs args)
+        {
+            CalculateProgress(args, totalDuration, segmentOffset);
+        }
 
         proc.Start();
         proc.BeginOutputReadLine();
@@ -212,205 +222,197 @@ public static partial class WhisperService
         proc.ErrorDataReceived -= WhisperErrorLogger;
 
         return;
+    }
 
-        void ProgressHandler(object _, DataReceivedEventArgs args)
-        {
-            CalculateProgress(args, totalDuration, segmentOffset);
-        }
 
-        private static void WhisperInfoLogger(object sender, DataReceivedEventArgs e)
-        {
-            WhisperLogger.LogDebug(e.Data);
-        }
+    private static void WhisperInfoLogger(object sender, DataReceivedEventArgs e)
+    {
+        WhisperLogger.LogDebug(e.Data);
+    }
 
-        private static void WhisperErrorLogger(object sender, DataReceivedEventArgs e)
-        {
-            WhisperLogger.LogError(e.Data);
-        }
+    private static void WhisperErrorLogger(object sender, DataReceivedEventArgs e)
+    {
+        WhisperLogger.LogError(e.Data);
+    }
 
-        private static void FfmpegInfoLogger(object sender, DataReceivedEventArgs e)
-        {
-            FfmpegLogger.LogDebug(e.Data);
-        }
+    private static void FfmpegInfoLogger(object sender, DataReceivedEventArgs e)
+    {
+        FfmpegLogger.LogDebug(e.Data);
+    }
 
-        private static void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration, TimeSpan segmentOffset)
-        {
-            if (args.Data is null) return;
+    private static void CalculateProgress(DataReceivedEventArgs args, TimeSpan totalDuration, TimeSpan segmentOffset)
+    {
+        if (args.Data is null) return;
 
-            var lastLine = args.Data.Split('\n').Last();
-            var timestampString = lastLine.Split(']').First().Split(' ').Last();
-            if (timestampString.Count(':') < 1) return;
-            if (timestampString.Count(':') == 1) timestampString = $"00:{timestampString}";
-            var timestamp = TimeSpan.Parse(timestampString);
+        var lastLine = args.Data.Split('\n').Last();
+        var timestampString = lastLine.Split(']').First().Split(' ').Last();
+        if (timestampString.Count(':') < 1) return;
+        if (timestampString.Count(':') == 1) timestampString = $"00:{timestampString}";
+        var timestamp = TimeSpan.Parse(timestampString);
 
-            var progress = (segmentOffset + timestamp) / totalDuration * 100.0;
+        var progress = (segmentOffset + timestamp) / totalDuration * 100.0;
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
-            OnProgress?.Invoke(null, new ProgressEventArgs(progress));
+        OnProgress?.Invoke(null, new ProgressEventArgs(progress));
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
+    }
+
+    private static async Task SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
+    {
+        Directory.CreateDirectory(tempPath);
+
+        var ext = Path.GetExtension(path);
+        var outputTemplate = Path.Combine(tempPath, $"segment-%d{ext}");
+
+        string[] arguments =
+        [
+            $"-i \"{path}\"",
+            await IsAudio(path, ct) ? "" : "-vn -acodec copy",
+            "-f segment",
+            $"-segment_time {maxTime.TotalSeconds}",
+            "-reset_timestamps 1",
+            $"\"{outputTemplate}\""
+        ];
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = GetExecutable(ConfigService.Config.FfmpegLocation),
+            Arguments = string.Join(' ', arguments),
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var proc = new Process();
+        proc.StartInfo = startInfo;
+        proc.EnableRaisingEvents = true;
+
+        proc.ErrorDataReceived += FfmpegInfoLogger;
+        proc.OutputDataReceived += FfmpegInfoLogger;
+
+        proc.Start();
+        proc.BeginErrorReadLine();
+        proc.BeginOutputReadLine();
+
+        try
+        {
+            await proc.WaitForExitAsync(ct);
+        }
+        catch (TaskCanceledException)
+        {
+            proc.Kill();
+            throw;
         }
 
-        private static async Task SplitFile(string path, string tempPath, TimeSpan maxTime, CancellationToken ct)
+        proc.ErrorDataReceived -= FfmpegInfoLogger;
+        proc.OutputDataReceived -= FfmpegInfoLogger;
+
+        if (proc.ExitCode != 0) throw new FfmpegException(proc.ExitCode);
+    }
+
+    private static async Task<bool> IsAudio(string path, CancellationToken ct)
+    {
+        var info = new ProcessStartInfo
         {
-            Directory.CreateDirectory(tempPath);
+            FileName = GetExecutable(ConfigService.Config.FfmpegLocation),
+            Arguments = $"-v error -select_streams v -show_entries stream=codec_type -of csv=p=0 \"{path}\"",
+            RedirectStandardOutput = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
 
-            var ext = Path.GetExtension(path);
-            var outputTemplate = Path.Combine(tempPath, $"segment-%d{ext}");
+        using var p = new Process();
+        p.StartInfo = info;
+        p.Start();
+        var output = await p.StandardOutput.ReadToEndAsync(ct);
+        await p.WaitForExitAsync(ct);
 
-            string[] arguments =
-            [
-                $"-i \"{path}\"",
-                await IsAudio(path, ct) ? "" : "-vn -acodec copy",
-                "-f segment",
-                $"-segment_time {maxTime.TotalSeconds}",
-                "-reset_timestamps 1",
-                $"\"{outputTemplate}\""
-            ];
+        return string.IsNullOrWhiteSpace(output);
+    }
 
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = GetExecutable(ConfigService.Config.FfmpegLocation),
-                Arguments = string.Join(' ', arguments),
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var proc = new Process();
-            proc.StartInfo = startInfo;
-            proc.EnableRaisingEvents = true;
-
-            proc.ErrorDataReceived += FfmpegInfoLogger;
-            proc.OutputDataReceived += FfmpegInfoLogger;
-
-            proc.Start();
-            proc.BeginErrorReadLine();
-            proc.BeginOutputReadLine();
-
-            try
-            {
-                await proc.WaitForExitAsync(ct);
-            }
-            catch (TaskCanceledException)
-            {
-                proc.Kill();
-                throw;
-            }
-
-            proc.ErrorDataReceived -= FfmpegInfoLogger;
-            proc.OutputDataReceived -= FfmpegInfoLogger;
-
-            if (proc.ExitCode != 0) throw new FfmpegException(proc.ExitCode);
-        }
-
-        private static async Task<bool> IsAudio(string path, CancellationToken ct)
+    private static async Task Combine(TimeSpan segmentDuration, string output, OutputFormat format, params IEnumerable<string> input)
+    {
+        var timeStampRegex = format switch
         {
-            var info = new ProcessStartInfo
-            {
-                FileName = GetExecutable(ConfigService.Config.FfmpegLocation),
-                Arguments = $"-v error -select_streams v -show_entries stream=codec_type -of csv=p=0 \"{path}\"",
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+            OutputFormat.VTT or OutputFormat.SRT => VttTimestampRegex(),
+            OutputFormat.TSV => TsvTimestampRegex(),
+            OutputFormat.JSON or OutputFormat.ALL => throw new UnreachableException(),
+            _ => throw new UnreachableException()
+        };
 
-            using var p = new Process();
-            p.StartInfo = info;
-            p.Start();
-            var output = await p.StandardOutput.ReadToEndAsync(ct);
-            await p.WaitForExitAsync(ct);
-
-            return string.IsNullOrWhiteSpace(output);
-        }
-
-        private static async Task Combine(TimeSpan segmentDuration, string output, OutputFormat format, params IEnumerable<string> input)
+        var firstHeader = true;
+        var skip = false;
+        var lines = new List<string>();
+        var i = 0;
+        foreach (var file in input)
         {
-            var timeStampRegex = format switch
+            foreach (var line in await File.ReadAllLinesAsync(file.Replace("\"", "")))
             {
-                OutputFormat.VTT or OutputFormat.SRT => VttTimestampRegex(),
-                OutputFormat.TSV => TsvTimestampRegex(),
-                OutputFormat.JSON or OutputFormat.ALL => throw new UnreachableException(),
-                _ => throw new UnreachableException()
-            };
-
-            var firstHeader = true;
-            var skip = false;
-            var lines = new List<string>();
-            var i = 0;
-            foreach (var file in input)
-            {
-                foreach (var line in await File.ReadAllLinesAsync(file.Replace("\"", "")))
+                if (skip)
                 {
-                    if (skip)
-                    {
-                        skip = false;
-                        continue;
-                    }
+                    skip = false;
+                    continue;
+                }
 
-                    // skip headers
-                    if (line is "WEBVTT" or "start\tend\ttext")
+                // skip headers
+                if (line is "WEBVTT" or "start\tend\ttext")
+                {
+                    if (firstHeader)
                     {
-                        if (firstHeader)
-                        {
-                            firstHeader = false;
-                        }
-                        else
-                        {
-                            if (line is "WEBVTT") skip = true;
-                            continue;
-                        }
-                    }
-
-                    // add text lines
-                    if (!timeStampRegex.IsMatch(line))
-                    {
-                        lines.Add(line);
-                        continue;
-                    }
-
-                    // add timestamped lines
-                    if (format == OutputFormat.TSV)
-                    {
-                        var parts = line.Split("\t");
-                        var start = long.Parse(parts[0]);
-                        start += i * (long)segmentDuration.TotalSeconds * 1000;
-                        var end = long.Parse(parts[1]);
-                        end += i * (long)segmentDuration.TotalSeconds * 1000;
-
-                        lines.Add($"{start}\t{end}\t{parts[2]}");
+                        firstHeader = false;
                     }
                     else
                     {
-                        var timestamps = line.Split(" --> ")
-                                             .Select(t => t.Count(':') > 1 ? t : $"00:{t}")
-                                             .Select(TimeSpan.Parse)
-                                             .Select(t => t + i * segmentDuration)
-                                             .Select(t => $"{t.Hours:00}:{t.Minutes:00}:{t.Seconds:00}.{t.Milliseconds:000}"); // 01:19:26.100
-                        lines.Add(string.Join(" --> ", timestamps));
+                        if (line is "WEBVTT") skip = true;
+                        continue;
                     }
                 }
 
-                i++;
-            }
-
-            await File.WriteAllLinesAsync(output.Replace("\"", ""), lines);
-        }
-
-        private static string GetExecutable(string path)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                if (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                // add text lines
+                if (!timeStampRegex.IsMatch(line))
                 {
-                    return $"{path}.exe";
+                    lines.Add(line);
+                    continue;
+                }
+
+                // add timestamped lines
+                if (format == OutputFormat.TSV)
+                {
+                    var parts = line.Split("\t");
+                    var start = long.Parse(parts[0]);
+                    start += i * (long)segmentDuration.TotalSeconds * 1000;
+                    var end = long.Parse(parts[1]);
+                    end += i * (long)segmentDuration.TotalSeconds * 1000;
+
+                    lines.Add($"{start}\t{end}\t{parts[2]}");
+                }
+                else
+                {
+                    var timestamps = line.Split(" --> ")
+                                         .Select(t => t.Count(':') > 1 ? t : $"00:{t}")
+                                         .Select(TimeSpan.Parse)
+                                         .Select(t => t + i * segmentDuration)
+                                         .Select(t => $"{t.Hours:00}:{t.Minutes:00}:{t.Seconds:00}.{t.Milliseconds:000}"); // 01:19:26.100
+                    lines.Add(string.Join(" --> ", timestamps));
                 }
             }
 
-            return path;
+            i++;
         }
 
-        [GeneratedRegex(@"(\d\d:)+(\d\d.\d+) --> (\d\d:)+(\d\d.\d+)")]
+        await File.WriteAllLinesAsync(output.Replace("\"", ""), lines);
+    }
 
+    private static string GetExecutable(string path)
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!path.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                return $"{path}.exe";
+
+        return path;
+    }
+
+    [GeneratedRegex(@"(\d\d:)+(\d\d.\d+) --> (\d\d:)+(\d\d.\d+)")]
     private static partial Regex VttTimestampRegex();
 
     [GeneratedRegex(@"\d+\t\d+\t.*")] private static partial Regex TsvTimestampRegex();
@@ -423,6 +425,4 @@ public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
 public class ProgressEventArgs(double value) : EventArgs
 {
     public readonly double Value = value;
-}
-
 }
