@@ -1,4 +1,4 @@
-﻿# AutoCaption
+# AutoCaption
 
 ## Prerequisites
 

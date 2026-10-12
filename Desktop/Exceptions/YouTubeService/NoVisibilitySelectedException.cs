@@ -1,3 +1,3 @@
-﻿namespace Desktop.Exceptions.YouTubeService;
+namespace Desktop.Exceptions.YouTubeService;
 
 public class NoVisibilitySelectedException : YouTubeServiceException;

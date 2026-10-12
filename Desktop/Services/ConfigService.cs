@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -16,7 +15,6 @@ public static class ConfigService
         JsonOptions.Converters.Add(new JsonStringEnumConverter());
         JsonOptions.WriteIndented = true;
 
-
         if (FromSettings())
         {
             Save();
@@ -26,19 +24,19 @@ public static class ConfigService
         // Default Values
         Config = new Configuration
         {
-            PythonLocation = "./tools/python/python.exe",
-            FfmpegLocation = "./tools/ffmpeg/bin",
+            PythonExecutable = null!,
+            FfmpegLocation = "./tools/ffmpeg",
             YtdlpLocation = "./tools/yt-dlp",
             OutputFormat = OutputFormat.VTT,
             Model = Model.Turbo,
             UseGpu = true,
-            ChunkSize = TimeSpan.FromMinutes(30),
+            ChunkSize = TimeSpan.FromMinutes(20),
             DoSplitting = true,
             Language = "en",
             OutputLocation = "./",
             YouTubeCaptionName = "",
             GenerateWithoutUploading = true,
-            ContinueOnError = false
+            ContinueOnError = true
         };
         Save();
     }
@@ -97,6 +95,16 @@ public static class ConfigService
 
     public class Configuration
     {
+        public string PythonExecutable
+        {
+            get;
+            set
+            {
+                field = value?.Replace('\\', '/');
+                Save();
+            }
+        }
+
         public OutputFormat OutputFormat
         {
             get;
@@ -107,35 +115,25 @@ public static class ConfigService
             }
         }
 
-        public string PythonLocation
-        {
-            get;
-            set
-            {
-                field = value;
-                Save();
-            }
-        } = "./tools/python/python";
-
         public string FfmpegLocation
         {
             get;
             set
             {
-                field = value;
+                field = value?.Replace('\\', '/');
                 Save();
             }
-        } = "./tools/ffmpeg/bin";
+        }
 
         public string YtdlpLocation
         {
             get;
             set
             {
-                field = value;
+                field = value?.Replace('\\', '/');
                 Save();
             }
-        } = "./tools/yt-dlp";
+        }
 
         public bool UseGpu
         {
@@ -172,10 +170,10 @@ public static class ConfigService
             get;
             set
             {
-                field = value.Replace('\\', '/');
+                field = value?.Replace('\\', '/');
                 Save();
             }
-        } = "";
+        }
 
         public string Language
         {
@@ -185,7 +183,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = "";
+        }
 
         public TimeSpan ChunkSize
         {
@@ -195,7 +193,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = TimeSpan.FromMinutes(20);
+        }
 
         public Loglevel LogLevel
         {
@@ -205,7 +203,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = Loglevel.Info;
+        }
 
         public bool LogToFile
         {
@@ -215,7 +213,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = true;
+        }
 
         public string YouTubeCaptionName
         {
@@ -225,7 +223,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = "";
+        }
 
         public bool GenerateWithoutUploading
         {
@@ -235,7 +233,7 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = true;
+        }
 
         public bool ContinueOnError
         {
@@ -245,28 +243,6 @@ public static class ConfigService
                 field = value;
                 Save();
             }
-        } = true;
+        }
     }
-}
-
-[SuppressMessage("ReSharper", "InconsistentNaming")]
-public enum OutputFormat
-{
-    VTT,
-    JSON,
-    TXT,
-    SRT,
-    TSV,
-    ALL
-}
-
-[SuppressMessage("ReSharper", "UnusedMember.Global")]
-public enum Model
-{
-    Tiny,
-    Base,
-    Small,
-    Medium,
-    Large,
-    Turbo
 }

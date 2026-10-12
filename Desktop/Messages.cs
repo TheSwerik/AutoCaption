@@ -1,4 +1,4 @@
-﻿using Desktop.ViewModels;
+using Desktop.ViewModels;
 
 namespace Desktop;
 
