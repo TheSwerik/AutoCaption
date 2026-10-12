@@ -60,7 +60,7 @@ public partial class FileItemViewModel : ViewModelBase
         var dialog = new ConfirmationWindow
         {
             DataContext = new ConfirmationViewModel("Are you  sure?",
-                "The File is currently being processed. Deleting the File from the view, will cancel the processing. Do you want to proceed?")
+                                                    "The File is currently being processed. Deleting the File from the view, will cancel the processing. Do you want to proceed?")
         };
         App.Windows.Add(dialog);
         var response = await dialog.ShowDialog<bool?>(mainWindow);
@@ -192,21 +192,17 @@ public partial class FileItemViewModel : ViewModelBase
     private void Reveal()
     {
         if (YoutubeService.IsYoutubePath(Path))
-        {
             System.Diagnostics.Process.Start(new ProcessStartInfo
             {
                 FileName = YoutubeService.GetYouTubeVideoUrl(YoutubeService.GetYouTubeVideoId(Path)!),
                 UseShellExecute = true
             });
-        }
         else
-        {
             System.Diagnostics.Process.Start(new ProcessStartInfo
             {
                 FileName = "explorer.exe",
                 Arguments = $"/select,\"{Path}\"",
                 UseShellExecute = true
             });
-        }
     }
 }

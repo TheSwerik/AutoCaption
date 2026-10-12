@@ -109,7 +109,7 @@ public static partial class WhisperService
                         Logger.LogInformation($"Combining {extension} segments");
                         var captionExtension = extension.ToString().ToLowerInvariant();
                         var segmentFiles = Enumerable.Range(0, segments)
-                            .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
+                                                     .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
                         var outputLanguage = settings.IsTranslate ? "en" : settings.Language;
                         var outputFile =
                             $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{outputLanguage}.{captionExtension}";
@@ -131,7 +131,7 @@ public static partial class WhisperService
                     Logger.LogInformation($"Combining {ConfigService.Config.OutputFormat} segments");
                     var captionExtension = ConfigService.Config.OutputFormat.ToString().ToLowerInvariant();
                     var segmentFiles = Enumerable.Range(0, segments)
-                        .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
+                                                 .Select(i => $"\"{tempPath}/segment-{i}.{captionExtension}\"");
                     var outputLanguage = settings.IsTranslate ? "en" : settings.Language;
                     var outputFile =
                         $"{settings.OutputLocation.Replace("\"", "")}/{Path.GetFileNameWithoutExtension(settings.FilePath)}.{outputLanguage}.{captionExtension}";
@@ -274,7 +274,7 @@ public static partial class WhisperService
 
         var startInfo = new ProcessStartInfo
         {
-            FileName = $"{ConfigService.Config.FfmpegLocation}/ffmpeg.exe",
+            FileName = Executable.GetExecutable(ConfigService.Config.FfmpegLocation),
             Arguments = string.Join(' ', arguments),
             RedirectStandardError = true,
             RedirectStandardOutput = true,
@@ -309,11 +309,12 @@ public static partial class WhisperService
         if (proc.ExitCode != 0) throw new FfmpegException(proc.ExitCode);
     }
 
+
     private static async Task<bool> IsAudio(string path, CancellationToken ct)
     {
         var info = new ProcessStartInfo
         {
-            FileName = $"{ConfigService.Config.FfmpegLocation}/ffprobe.exe",
+            FileName = Executable.GetExecutable(ConfigService.Config.FfmpegLocation),
             Arguments = $"-v error -select_streams v -show_entries stream=codec_type -of csv=p=0 \"{path}\"",
             RedirectStandardOutput = true,
             UseShellExecute = false,
@@ -388,10 +389,10 @@ public static partial class WhisperService
                 else
                 {
                     var timestamps = line.Split(" --> ")
-                        .Select(t => t.Count(c => c == ':') > 1 ? t : $"00:{t}")
-                        .Select(TimeSpan.Parse)
-                        .Select(t => t + i * segmentDuration)
-                        .Select(t => $"{t.Hours:00}:{t.Minutes:00}:{t.Seconds:00}.{t.Milliseconds:000}"); // 01:19:26.100
+                                         .Select(t => t.Count(c => c == ':') > 1 ? t : $"00:{t}")
+                                         .Select(TimeSpan.Parse)
+                                         .Select(t => t + i * segmentDuration)
+                                         .Select(t => $"{t.Hours:00}:{t.Minutes:00}:{t.Seconds:00}.{t.Milliseconds:000}"); // 01:19:26.100
                     lines.Add(string.Join(" --> ", timestamps));
                 }
             }
@@ -405,8 +406,7 @@ public static partial class WhisperService
     [GeneratedRegex(@"(\d\d:)+(\d\d.\d+) --> (\d\d:)+(\d\d.\d+)")]
     private static partial Regex VttTimestampRegex();
 
-    [GeneratedRegex(@"\d+\t\d+\t.*")]
-    private static partial Regex TsvTimestampRegex();
+    [GeneratedRegex(@"\d+\t\d+\t.*")] private static partial Regex TsvTimestampRegex();
 }
 
 public record WhisperSettings(string FilePath, string OutputLocation, string Language, bool DoSplitting, bool IsTranslate);

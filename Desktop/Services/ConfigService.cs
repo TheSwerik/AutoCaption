@@ -112,30 +112,30 @@ public static class ConfigService
             get;
             set
             {
-                field = value.Replace('\\', '/');
+                field = value;
                 Save();
             }
-        } = null!;
+        } = "./tools/python/python";
 
         public string FfmpegLocation
         {
             get;
             set
             {
-                field = value.Replace('\\', '/');
+                field = value;
                 Save();
             }
-        } = null!;
+        } = "./tools/ffmpeg/bin";
 
         public string YtdlpLocation
         {
             get;
             set
             {
-                field = value.Replace('\\', '/');
+                field = value;
                 Save();
             }
-        } = null!;
+        } = "./tools/yt-dlp";
 
         public bool UseGpu
         {

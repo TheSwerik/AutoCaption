@@ -24,7 +24,8 @@ public partial class FileItemSettingsViewModel : ViewModelBase
 
     [ObservableProperty] private CultureInfo _language = CultureInfo.GetCultureInfo("en-US");
 
-    [ObservableProperty] private ObservableCollection<CultureInfo> _languages =
+    [ObservableProperty]
+    private ObservableCollection<CultureInfo> _languages =
         new(CultureInfo.GetCultures(CultureTypes.AllCultures).OrderBy(c => c.EnglishName));
 
     public FileItemSettingsViewModel()

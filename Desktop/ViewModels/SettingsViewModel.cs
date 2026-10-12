@@ -24,7 +24,8 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly ConfigService.Configuration _original;
     [ObservableProperty] private CultureInfo _language;
 
-    [ObservableProperty] private ObservableCollection<CultureInfo> _languages =
+    [ObservableProperty]
+    private ObservableCollection<CultureInfo> _languages =
         new(CultureInfo.GetCultures(CultureTypes.AllCultures).OrderBy(c => c.EnglishName));
 
     [ObservableProperty] private ObservableCollection<Loglevel> _logLevels = new(Enum.GetValues<Loglevel>());

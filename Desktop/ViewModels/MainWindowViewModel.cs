@@ -46,43 +46,47 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         LoadSession();
 
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, AddInputFilesMessage>(this,
-            static async void (vm, _) =>
-            {
-                var mainWindow = App.Windows.First(w => w is MainWindow);
-                var topLevel = TopLevel.GetTopLevel(mainWindow) ?? throw new UnreachableException();
+                                                                                           static async void (vm, _) =>
+                                                                                           {
+                                                                                               var mainWindow = App.Windows.First(w => w is MainWindow);
+                                                                                               var topLevel = TopLevel.GetTopLevel(mainWindow) ??
+                                                                                                   throw new UnreachableException();
 
-                var inputOptions = new FilePickerOpenOptions
-                {
-                    AllowMultiple = true,
-                    Title = "Input Files"
-                };
-                var input = await topLevel.StorageProvider.OpenFilePickerAsync(inputOptions);
-                var files = input.Select(f => f.Path.LocalPath);
-                vm.AddFiles(files);
-            });
+                                                                                               var inputOptions = new FilePickerOpenOptions
+                                                                                               {
+                                                                                                   AllowMultiple = true,
+                                                                                                   Title = "Input Files"
+                                                                                               };
+                                                                                               var input =
+                                                                                                   await topLevel.StorageProvider.OpenFilePickerAsync(
+                                                                                                       inputOptions);
+                                                                                               var files = input.Select(f => f.Path.LocalPath);
+                                                                                               vm.AddFiles(files);
+                                                                                           });
 
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, RemoveInputFileMessage>(this,
-            static void (vm, m) => vm.RemoveFile(m.Path));
+                                                                                             static void (vm, m) => vm.RemoveFile(m.Path));
 
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, EditInputFileMessage>(this,
-            static async void (vm, m) =>
-            {
-                var mainWindow = App.Windows.First(w => w is MainWindow);
-                var dialog = new FileItemSettingsWindow { DataContext = new FileItemSettingsViewModel(m.File) };
-                App.Windows.Add(dialog);
-                var response = await dialog.ShowDialog<bool?>(mainWindow);
-                App.Windows.Remove(dialog);
-                vm.SaveSession();
-            });
+                                                                                           static async void (vm, m) =>
+                                                                                           {
+                                                                                               var mainWindow = App.Windows.First(w => w is MainWindow);
+                                                                                               var dialog = new FileItemSettingsWindow
+                                                                                                   { DataContext = new FileItemSettingsViewModel(m.File) };
+                                                                                               App.Windows.Add(dialog);
+                                                                                               var response = await dialog.ShowDialog<bool?>(mainWindow);
+                                                                                               App.Windows.Remove(dialog);
+                                                                                               vm.SaveSession();
+                                                                                           });
 
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, CancelMessage>(this,
-            async void (vm, _) => await vm.Cancel());
+                                                                                    async void (vm, _) => await vm.Cancel());
         WeakReferenceMessenger.Default.Register<MainWindowViewModel, StartMessage>(this,
-            async void (vm, m) =>
-            {
-                while (m.WaitUntilReady && IsInProgress) await Task.Delay(50);
-                await vm.Start();
-            });
+                                                                                   async void (vm, m) =>
+                                                                                   {
+                                                                                       while (m.WaitUntilReady && IsInProgress) await Task.Delay(50);
+                                                                                       await vm.Start();
+                                                                                   });
     }
 
     public void Dispose()
@@ -129,7 +133,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             var confirmation = new ConfirmationWindow
             {
                 DataContext = new ConfirmationViewModel("Quota exceeded",
-                    $"The daily Quota for YouTube has been exceeded.\nYou can add all {e.PartialValue.Value.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {e.PartialValue.Value.Length} Videos to the session?")
+                                                        $"The daily Quota for YouTube has been exceeded.\nYou can add all {e.PartialValue.Value.Length} Videos to the session and continue next time (use the skip setting) or you can abort the operation and start over tomorrow.\nDo you want to add all {e.PartialValue.Value.Length} Videos to the session?")
             };
             var confirmationResponse = await App.OpenModal<MainWindow, bool?>(confirmation);
             if (confirmationResponse is not true)
@@ -210,7 +214,7 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
         var dialog = new ConfirmationWindow
         {
             DataContext = new ConfirmationViewModel("Clear All",
-                "Do you want to remove every File? Even uncompleted and currently in progress?")
+                                                    "Do you want to remove every File? Even uncompleted and currently in progress?")
         };
         var response = await App.OpenModal<MainWindow, bool?>(dialog);
         if (response is null || !response.Value) return;

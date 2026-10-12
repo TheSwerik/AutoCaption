@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 
@@ -10,6 +9,6 @@ public partial class AddViewModel : ViewModelBase
     [RelayCommand]
     private async Task Add()
     {
-         WeakReferenceMessenger.Default.Send(new AddInputFilesMessage());
+        WeakReferenceMessenger.Default.Send(new AddInputFilesMessage());
     }
 }

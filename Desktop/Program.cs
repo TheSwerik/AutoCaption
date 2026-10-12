@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using Avalonia;
 using Desktop.Services;
 
@@ -35,14 +36,21 @@ internal sealed class Program
     private static AppBuilder BuildAvaloniaApp()
     {
         return AppBuilder.Configure<App>()
-            .UsePlatformDetect()
-            .WithInterFont()
-            .LogToTrace();
+                         .UsePlatformDetect()
+                         .WithInterFont()
+                         .LogToTrace();
     }
 
 #if DEBUG
     private static void InstallFFmpeg(bool update)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Logger.LogInformation(
+                "Skipping automatic FFmpeg installation on non-Windows platform. Please ensure ffmpeg is installed via your system package manager.");
+            return;
+        }
+
         const string downloadUrl =
             "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
         const string ffmpegFolder = "./tools/ffmpeg";
@@ -68,6 +76,13 @@ internal sealed class Program
 
     private static void InstallYtDlp(bool update)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Logger.LogInformation(
+                "Skipping automatic yt-dlp installation on non-Windows platform. Please ensure yt-dlp is installed via your system package manager.");
+            return;
+        }
+
         const string downloadUrl = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_win.zip";
         const string ytdlpFolder = "./tools/yt-dlp";
         const string ytdlpPath = $"{ytdlpFolder}/yt-dlp.exe";
@@ -88,6 +103,13 @@ internal sealed class Program
 
     private static void InstallWhisper(bool update)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Logger.LogInformation(
+                "Skipping automatic Whisper installation on non-Windows platform. Please ensure python and ffmpeg are installed via your system package manager.");
+            return;
+        }
+
         List<string> arguments = ["whisper", "-h"];
 
         var info = new ProcessStartInfo
@@ -144,6 +166,9 @@ internal sealed class Program
         process2.OutputDataReceived -= LogPipOutput;
         process2.ErrorDataReceived -= LogPipError;
 
+        if (process2.ExitCode == 0) return;
+
+        Logger.LogInformation("installing torch...");
         arguments =
         [
             "pip", "install", "--upgrade", "torch", "torchvision", "torchaudio",
