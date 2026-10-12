@@ -8,8 +8,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Desktop.Exceptions.WhisperService;
-using MediaToolkit;
-using MediaToolkit.Model;
 
 namespace Desktop.Services;
 
@@ -38,20 +36,16 @@ public static partial class WhisperService
 
         var maxDuration = ConfigService.Config.ChunkSize;
 
-        var inputFile = new MediaFile { Filename = settings.FilePath };
-        using (var engine = new Engine())
-        {
-            engine.GetMetadata(inputFile);
-        }
+        var duration = await GetDurationAsync(settings.FilePath, ct);
 
         try
         {
-            if (!settings.DoSplitting || inputFile.Metadata.Duration < maxDuration)
+            if (!settings.DoSplitting || duration < maxDuration)
             {
                 // process without splitting
-                Logger.LogInformation($"Duration {inputFile.Metadata.Duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
+                Logger.LogInformation($"Duration {duration} of file {settings.FilePath} does not exceed maximum duration of {maxDuration}.");
                 Logger.LogInformation($"Processing file {settings.FilePath} in one chunk.");
-                await Process(settings, inputFile.Metadata.Duration, TimeSpan.Zero, ct);
+                await Process(settings, duration, TimeSpan.Zero, ct);
                 var filePattern = $"{Path.GetFileNameWithoutExtension(settings.FilePath)}*";
                 var files = Directory.GetFiles(settings.OutputLocation.Replace("\"", ""), filePattern);
                 foreach (var file in files)
@@ -82,7 +76,7 @@ public static partial class WhisperService
 
             // process each segment
             Logger.LogInformation("Processing each Segment...");
-            var segments = (int)Math.Ceiling(inputFile.Metadata.Duration / maxDuration);
+            var segments = (int)Math.Ceiling(duration / maxDuration);
             for (var i = 0; i < segments; i++)
             {
                 Logger.LogInformation($"Processing Segment {i}...");
@@ -93,7 +87,7 @@ public static partial class WhisperService
                     true,
                     settings.IsTranslate
                 );
-                await Process(segmentSettings, inputFile.Metadata.Duration, i * maxDuration, ct);
+                await Process(segmentSettings, duration, i * maxDuration, ct);
                 Logger.LogInformation($"Processing of Segment {i} completed.");
             }
 
@@ -315,8 +309,9 @@ public static partial class WhisperService
         var info = new ProcessStartInfo
         {
             FileName = GetExecutable(ConfigService.Config.FfmpegLocation),
-            Arguments = $"-v error -select_streams v -show_entries stream=codec_type -of csv=p=0 \"{path}\"",
+            Arguments = $"-i \"{path.Replace("\"", "")}\"",
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
@@ -324,10 +319,37 @@ public static partial class WhisperService
         using var p = new Process();
         p.StartInfo = info;
         p.Start();
-        var output = await p.StandardOutput.ReadToEndAsync(ct);
+        var output = await p.StandardError.ReadToEndAsync(ct);
         await p.WaitForExitAsync(ct);
 
-        return string.IsNullOrWhiteSpace(output);
+        return !output.Contains("Video:");
+    }
+
+    private static async Task<TimeSpan> GetDurationAsync(string path, CancellationToken ct)
+    {
+        var info = new ProcessStartInfo
+        {
+            FileName = GetExecutable(ConfigService.Config.FfmpegLocation),
+            Arguments = $"-i \"{path.Replace("\"", "")}\"",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var p = new Process();
+        p.StartInfo = info;
+        p.Start();
+        var output = await p.StandardError.ReadToEndAsync(ct);
+        await p.WaitForExitAsync(ct);
+
+        var match = DurationRegex().Match(output);
+        if (!match.Success)
+        {
+            throw new Exception($"Could not determine duration of {path}.");
+        }
+
+        return TimeSpan.Parse(match.Groups[1].Value);
     }
 
     private static async Task Combine(TimeSpan segmentDuration, string output, OutputFormat format, params IEnumerable<string> input)
@@ -416,6 +438,9 @@ public static partial class WhisperService
     private static partial Regex VttTimestampRegex();
 
     [GeneratedRegex(@"\d+\t\d+\t.*")] private static partial Regex TsvTimestampRegex();
+
+    [GeneratedRegex(@"Duration: (\d+:\d{2}:\d{2}\.\d+)")]
+    private static partial Regex DurationRegex();
 }
 
 public record WhisperSettings(string FilePath, string OutputLocation, string Language, bool DoSplitting, bool IsTranslate);

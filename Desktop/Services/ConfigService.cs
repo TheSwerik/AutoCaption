@@ -30,13 +30,13 @@ public static class ConfigService
             OutputFormat = OutputFormat.VTT,
             Model = Model.Turbo,
             UseGpu = true,
-            ChunkSize = TimeSpan.FromMinutes(20),
+            ChunkSize = TimeSpan.FromMinutes(30),
             DoSplitting = true,
             Language = "en",
             OutputLocation = "./",
             YouTubeCaptionName = "",
             GenerateWithoutUploading = true,
-            ContinueOnError = true
+            ContinueOnError = false
         };
         Save();
     }
